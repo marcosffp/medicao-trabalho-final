@@ -12,7 +12,7 @@ python3 -m venv .venv
 .venv/bin/streamlit run dashboard/app.py
 ```
 
-**Acesso:** o dashboard não tem link público. Ele roda localmente com os comandos acima e é demonstrado ao vivo na defesa.
+**Acesso:** https://survey-ia-medicao-es.streamlit.app/ (Streamlit Community Cloud, Python 3.12, lê o XLSX da raiz do repositório). Também roda localmente com os comandos acima.
 
 ## Fonte dos dados (nesta ordem)
 

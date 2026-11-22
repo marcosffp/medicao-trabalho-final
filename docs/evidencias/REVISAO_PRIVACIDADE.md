@@ -39,3 +39,11 @@
 3. Em qualquer opção: não incluir mais arquivos com texto livre ou carimbos completos.
 
 Mudar a visibilidade ou reescrever o histórico altera o repositório compartilhado do grupo e deve ser combinado com todos os integrantes.
+
+## Decisão sobre o XLSX bruto público (22/11/2026)
+
+**Decisão registrada: manter o XLSX no repositório público, risco aceito e declarado.** Motivos: (1) o enunciado da Parte 2 exige que o dashboard leia o dado bruto, e o dashboard publicado no Streamlit Community Cloud lê o XLSX deste repositório; removê-lo derrubaria o link público; (2) o formulário não coletou nome, e-mail nem IP; (3) o hash em `SHA256SUMS.txt` só prova integridade se o arquivo estiver acessível.
+
+**Risco que permanece:** o arquivo traz o carimbo de data/hora e as respostas em texto livre de P4 e P5 ("Outra"). A combinação de carimbo, perfil e P1 pode, em redes pequenas, ajudar a identificar alguém (risco citado na Seção 6 do protocolo). Já está declarado em D1 (`dashboard/desvios.md`).
+
+**Para o grupo:** decisão **confirmada pelo grupo em 22/11/2026**. Se preferirem remover o XLSX do Git, será preciso trocar a leitura do dashboard (upload manual ou arquivo privado) e republicar o link.

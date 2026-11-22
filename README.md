@@ -25,7 +25,7 @@ python3 -m venv .venv
 .venv/bin/streamlit run dashboard/app.py
 ```
 
-O dashboard abre no navegador e encontra sozinho o arquivo `Respostas - … (COLETA).xlsx` na raiz. Também aceita outro CSV ou XLSX enviado na barra lateral ou a variável `SURVEY_DATA`. Detalhes em `dashboard/README.md`. O dashboard não tem link público: roda localmente.
+O dashboard abre no navegador e encontra sozinho o arquivo `Respostas - … (COLETA).xlsx` na raiz. Também aceita outro CSV ou XLSX enviado na barra lateral ou a variável `SURVEY_DATA`. Detalhes em `dashboard/README.md`. **Dashboard no ar:** https://survey-ia-medicao-es.streamlit.app/ (Streamlit Community Cloud).
 
 **Só a análise, sem interface:** `dashboard/analise.py` não depende do Streamlit.
 
@@ -37,7 +37,7 @@ d=a.preparar(a.ler_arquivo(f,f), json.load(open('codificacao_outra.json'))); \
 [print(r.rq, r.p, r.p_holm, r.efeito) for r in a.testes_confirmatorios(d.validas)]"
 ```
 
-**Conferência independente do alfa de Cronbach** (só `openpyxl`, sem o código do dashboard): `python3 dashboard/conferencia_alfa.py` na raiz.
+**Conferência independente** (só `openpyxl` e biblioteca padrão, sem o código do dashboard): `python3 dashboard/conferencia_alfa.py` (alfa de Cronbach) e `python3 dashboard/conferencia_rqs.py` (RQ1, RQ2 e RQ3) na raiz.
 
 ## Estrutura
 
@@ -51,7 +51,8 @@ d=a.preparar(a.ler_arquivo(f,f), json.load(open('codificacao_outra.json'))); \
 | `docs/codebook.md` | Itens, variáveis, escalas e codificação |
 | `docs/regras_de_limpeza.md` | Critérios de encerramento e descarte |
 | `docs/evidencias/` | Prints datados (Canvas e divulgação) e revisão de privacidade |
-| `docs/AUDITORIA_PARTE2.md` | Auditoria da Parte 2 contra o enunciado |
+| `docs/ENTREGA.md` | Pacote de entrega e verificação final |
+| `docs/defesa.md` | Roteiro de 10 minutos, respostas-chave da arguição e cenários |
 
 ## Reprodutibilidade e integridade
 
