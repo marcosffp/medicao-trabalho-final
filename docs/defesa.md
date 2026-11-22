@@ -14,19 +14,17 @@ Apoio para C5 (2,0 pts). Os números abaixo foram recalculados em 22/11/2026 (`d
 
 | Tempo | Conteúdo | Quem fala |
 |---|---|---|
-| 0:00–1:00 | Tema, objetivo GQM em uma frase e as 3 RQs, uma frase cada | **Marcos** |
-| 1:00–2:00 | Aba "Perfil da amostra": 90 recebidas, 11 inelegíveis (T1), 10 descartadas (AT1), 69 válidas; mínimo de 50 atendido; linha do tempo | **Gabriela** |
+| 0:00–2:00 | Tema, objetivo GQM em uma frase e as 3 RQs; aba "Perfil da amostra": 90 recebidas, 11 inelegíveis (T1), 10 descartadas (AT1), 69 válidas, mínimo de 50 atendido | **Marcos** |
 | 2:00–3:15 | Evidências: painel do Forms (90 respostas), export com carimbos, hash, print do Canvas, print do convite. **Declarar a lacuna D8 antes de ser perguntado** | **Brenda** |
 | 3:15–4:30 | Aba "Itens Likert" (divergente, PP5 recodificado) e aba "Confiabilidade" (α = 0,675, abaixo de 0,70, declarado) | **Bernardo** |
 | 4:30–6:30 | RQ1, RQ2, RQ3: teste, p, efeito, margem, conclusão. **Filtro por segmento ao vivo** (ex.: tempo de experiência) | **Gabriel** |
-| 6:30–7:15 | Desvios D1 a D8, limitações e ameaças | **Gabriela** |
-| 7:15–8:00 | Síntese em 3 frases e abertura para a mudança de cenário | **Marcos** |
+| 6:30–8:00 | Desvios D1 a D8, limitações e ameaças; síntese em 3 frases e abertura para a mudança de cenário | **Gabriela** |
 
 Os 8 minutos deixam folga dentro dos 10 da Fonte. Se o professor pedir para estender, o excedente vai para a demonstração do filtro e para a mudança de cenário.
 
 **Falas de apoio**
-- **Marcos, abertura:** "Estudamos a produtividade **percebida** de desenvolvedores no Brasil que usam assistentes de IA. RQ1: ela difere do ponto neutro? RQ2: associa-se à frequência de uso? RQ3: associa-se ao tempo de experiência? É autorrelato, transversal, e vale só para esta amostra."
-- **Marcos, síntese:** "RQ1 foi clara: a percepção fica acima do neutro. RQ2 mostrou associação média com a frequência de uso. RQ3 foi inconclusiva. Limites: amostra de conveniência, α abaixo de 0,70 e evidência de canal incompleta, tudo declarado."
+- **Marcos:** "Estudamos a produtividade **percebida** de desenvolvedores no Brasil que usam assistentes de IA. RQ1: ela difere do ponto neutro? RQ2: associa-se à frequência de uso? RQ3: associa-se ao tempo de experiência? É autorrelato, transversal, e vale só para esta amostra."
+- **Gabriela, síntese:** "RQ1 foi clara: a percepção fica acima do neutro. RQ2 mostrou associação média com a frequência de uso. RQ3 foi inconclusiva. Limites: amostra de conveniência, α abaixo de 0,70 e evidência de canal incompleta, tudo declarado."
 - **Todos:** nunca dizer "a IA aumenta a produtividade". Dizer "a produtividade **percebida** é maior nesta amostra".
 
 ## 3. Números que todos devem saber de cabeça
