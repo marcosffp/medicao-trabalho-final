@@ -18,7 +18,7 @@
 | Data/hora do commit/envio da Parte 1 (protocolo) | 13/11/2026 às 9:17, envio no Canvas (`docs/evidencias/canvas_envio_parte1_2026-11-13.png`; arquivo enviado: `Protocolo_do_Survey_v5 (1).pdf`) |
 | Data/hora da 1ª resposta coletada | 13/11/2026 20:46 (exportação oficial COLETA; **tem de ser POSTERIOR à data acima**). Última resposta: 19/11/2026 17:50 |
 | Ferramenta do dashboard | Streamlit (`dashboard/app.py`, lê o XLSX/CSV bruto; estatística em `dashboard/analise.py`) |
-| Link do dashboard | `[PREENCHER]` |
+| Link do dashboard | Sem link público: o dashboard é disponibilizado **apenas localmente** (instruções em `dashboard/README.md`) e demonstrado ao vivo na defesa. Código no repositório (link acima). *Confirmar no Canvas se basta a demonstração ao vivo (seção 13, item 4)* |
 | Organização com carta de anuência? (sim/não) | Não (survey em várias fontes; vale o mínimo de 50 válidas e a evidência E-B) |
 | Nº de respostas recebidas / válidas / descartadas | 90 / 69 / 21 (11 inelegíveis por T1 = não atua com desenvolvimento no Brasil + 10 descartadas por falha na pergunta de atenção AT1) |
 

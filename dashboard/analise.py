@@ -23,6 +23,8 @@ Z95 = 1.96
 N_META = 50
 MIN_SEGMENTO = 5  # Seção 6: não exibir segmentos com menos de 5 pessoas
 JANELA_COLETA = (pd.Timestamp("2026-11-11 00:00:00"), pd.Timestamp("2026-11-20 23:59:59"))
+# Envio real do protocolo no Canvas (docs/evidencias/canvas_envio_parte1_2026-11-13.png), regra R-08
+PROTOCOLO_ENVIO = pd.Timestamp("2026-11-13 09:17:00")
 
 # DECISÃO OPERACIONAL: o protocolo cita permutação e bootstrap sem fixar
 # número de reamostragens nem semente. Fixamos para o resultado ser reprodutível.

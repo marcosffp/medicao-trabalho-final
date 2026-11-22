@@ -120,6 +120,9 @@ filtro_ativo = bool(f_faixa or f_t2 or f_p2 or f_p3 or f_u1 or f_p4)
 st.sidebar.metric("Respostas válidas no filtro", f"{len(filtrada)} de {len(validas)}")
 
 
+AVISO_N_PEQUENO = 10  # aviso de cautela; abaixo de MIN_SEGMENTO (5) o segmento é ocultado
+
+
 def segmento_ok() -> bool:
     """Seção 6: com filtro ativo, segmentos com menos de 5 pessoas não são exibidos."""
     if filtro_ativo and len(filtrada) < a.MIN_SEGMENTO:
@@ -129,6 +132,10 @@ def segmento_ok() -> bool:
     if len(filtrada) == 0:
         st.info("Nenhuma resposta válida.")
         return False
+    if filtro_ativo and len(filtrada) < AVISO_N_PEQUENO:
+        st.warning(f"Segmento pequeno: n = {len(filtrada)}. Interprete com cautela. A margem de erro geral é de ± "
+                   f"{a.pp(a.margem_erro(0.5, len(filtrada)))} (p = 0,5) e os testes têm pouquíssimo poder. "
+                   "Os valores de p por segmento não são ajustados para múltiplas comparações.")
     return True
 
 
@@ -156,7 +163,7 @@ def grafico_barras(serie: pd.Series, titulo: str, ordem: list | None = None, pct
     df = pd.DataFrame({"categoria": cont.index.astype(str), "n": cont.values})
     df["%"] = (df["n"] / base * 100).round(1)
     fig = px.bar(df, x="n", y="categoria", orientation="h", text=df.apply(lambda r: f"{r.n} ({r['%']:.0f}%)", axis=1),
-                 title=titulo)
+                 title=f"{titulo} (n = {int(df['n'].sum())})")
     fig.update_layout(yaxis={"categoryorder": "array", "categoryarray": df["categoria"].tolist()[::-1], "title": None},
                       xaxis_title="respostas", height=90 + 32 * len(df), margin={"l": 10, "r": 10, "t": 40, "b": 10})
     fig.update_traces(textposition="outside", cliponaxis=False)
@@ -215,6 +222,34 @@ with abas[0]:
         st.warning(f"{n_fora} resposta(s) com data e hora fora da janela de coleta (11 a 20/11/2026). "
                    "Foram sinalizadas, não descartadas (ver Metodologia e desvios).")
 
+    st.header("Respostas por dia")
+    st.caption("Calculado sobre todas as respostas recebidas. A linha vertical marca o envio do protocolo no Canvas "
+               "(13/11/2026 às 9:17); toda resposta deve ficar à direita dela (R-08).")
+    dias = todas.dropna(subset=["carimbo"]).assign(dia=lambda d: d["carimbo"].dt.normalize())
+    por_dia = dias.groupby(["dia", "status"]).size().reset_index(name="n")
+    if not por_dia.empty:
+        fig = go.Figure()
+        cores_status = {"Válida": "#2166ac", "Descartada": "#ef8a62", "Inelegível": "#bdbdbd"}
+        for st_nome, cor in cores_status.items():
+            sub = por_dia[por_dia["status"] == st_nome]
+            fig.add_bar(x=sub["dia"] + pd.Timedelta(hours=12), y=sub["n"], name=st_nome, marker_color=cor)
+        fig.update_layout(barmode="stack", height=320, margin={"l": 10, "r": 10, "t": 30, "b": 10},
+                          yaxis_title="respostas", xaxis={"type": "date", "tickformat": "%d/%m", "dtick": 86400000,
+                                                          "tick0": "2026-11-11"})
+        fig.update_traces(width=86400000 * 0.8)
+        px_ = a.PROTOCOLO_ENVIO
+        fig.add_shape(type="line", x0=px_, x1=px_, y0=0, y1=1, yref="paper", line={"color": "black", "dash": "dash"})
+        fig.add_annotation(x=px_, y=1, yref="paper", text="Protocolo enviado (13/11, 9:17)", showarrow=False,
+                           xanchor="right", yanchor="bottom")
+        st.plotly_chart(fig, width="stretch")
+        antes = int((todas["carimbo"] < a.PROTOCOLO_ENVIO).sum())
+        primeira = todas["carimbo"].min()
+        if antes:
+            st.error(f"{antes} resposta(s) anteriores ao envio do protocolo: violam a regra R-08.")
+        else:
+            st.success(f"Primeira resposta em {primeira:%d/%m/%Y às %H:%M}, depois do envio do protocolo "
+                       f"({a.PROTOCOLO_ENVIO:%d/%m/%Y às %H:%M}): R-08 atendida.")
+
     st.header("Perfil das respostas válidas" + (" (filtro ativo)" if filtro_ativo else ""))
     if segmento_ok():
         v = filtrada
@@ -260,8 +295,9 @@ with abas[1]:
         for item in itens:
             col = v["PP5r"] if (item == "PP5" and recodificar) else v[item]
             dist = col.value_counts(normalize=True).reindex(range(1, 6), fill_value=0) * 100
-            rot = a.PP_TEXTO[item] + (" [recodificado]" if item == "PP5" and recodificar else "")
-            linhas.append((rot, dist, int(col.notna().sum())))
+            n_item = int(col.notna().sum())
+            rot = a.PP_TEXTO[item] + (" [recodificado]" if item == "PP5" and recodificar else "") + f" (n = {n_item})"
+            linhas.append((rot, dist, n_item))
         fig = go.Figure()
         ordem_y = [r for r, _, _ in linhas][::-1]
         # Neutro dividido ao meio dos dois lados do zero
@@ -281,7 +317,7 @@ with abas[1]:
                           margin={"l": 10, "r": 10, "t": 20, "b": 10})
         fig.add_vline(x=0, line_color="black", line_width=1)
         st.plotly_chart(fig, width="stretch")
-        st.caption(f"n = {len(v)}. O neutro (3) aparece dividido ao meio dos dois lados do zero. "
+        st.caption(f"n = {len(v)} respostas válidas no filtro; o n de cada item aparece no rótulo da barra. O neutro (3) aparece dividido ao meio dos dois lados do zero. "
                    "PP5 é invertido: no original, concordar significa trabalho mais cansativo, ou seja, menor produtividade percebida.")
 
         resumo = []
@@ -531,7 +567,7 @@ with abas[5]:
     st.header("Metodologia")
     st.markdown("""
 - **Desenho:** survey transversal, amostra não probabilística (conveniência com bola de neve), desenvolvedores no Brasil que usaram assistente de IA nos últimos 3 meses. Coleta via Google Formulários, prevista para 11 a 20/11/2026 e realizada de 13 a 19/11/2026 (desvio D3).
-- **Encerramento (inelegíveis):** C0 = não, T1 = não ou U1 = 1. **Descarte:** AT1 diferente de "Discordo" ou item obrigatório em branco. Linha reta (cinco itens PP iguais) só é sinalizada e testada em sensibilidade.
+- **Encerramento (inelegíveis):** C0 = não, T1 = não, T2 = "outro" ou U1 = 1. **Descarte:** AT1 diferente de "Discordo", item obrigatório em branco, P1 que não seja número inteiro (decisão operacional) ou resposta **repetida em sequência** (idêntica à anterior em todos os itens). Linha reta (cinco itens PP iguais) só é sinalizada e testada em sensibilidade.
 - **Variável de resposta:** PP_med, mediana de PP1 a PP5 com PP5 recodificado (6 − x). Ordinal: sem média, teste t ou Pearson.
 - **RQ1:** teste do sinal exato contra o neutro 3, sem empates; efeito = proporção de PP_med ≥ 4 entre os não empatados com IC de Clopper-Pearson; margem de erro pela fórmula do enunciado sobre a proporção de PP_med ≥ 4 entre todos os usuários válidos.
 - **RQ2 e RQ3:** Spearman (U1 × PP_med e P1 × PP_med) com postos médios; p pela aproximação t, e o p por permutação (10.000) prevalece se os dois divergirem na decisão; IC de ρ por bootstrap percentil (10.000). Leitura de ρ por Cohen (0,1 / 0,3 / 0,5).
@@ -554,6 +590,8 @@ with abas[5]:
         ("Empates em PP_med = 3 (RQ1)", "cerca de 20%",
          f"{empates} ({a.pct(empates / len(validas)) if len(validas) else '–'})", "Informativo"),
         ("Faixas de P1 agrupadas (< 5 pessoas)", "agrupar com a vizinha", "; ".join(agrupadas) or "nenhuma", "Conforme o protocolo"),
+        ("Respostas anteriores ao envio do protocolo (13/11, 9:17)", "0", str(int((todas["carimbo"] < a.PROTOCOLO_ENVIO).sum())),
+         "OK" if not (todas["carimbo"] < a.PROTOCOLO_ENVIO).any() else "Viola R-08"),
         ("Respostas fora de 11 a 20/11/2026", "0", str(int(todas["fora_janela"].sum())),
          "OK" if not todas["fora_janela"].any() else "Sinalizadas"),
         ("Marcações 'Outra' sem codificação (P4 + P5)", "0 após a codificação", str(outras),
@@ -567,6 +605,12 @@ with abas[5]:
         st.caption(f"Com n = {len(validas)}, a margem de erro geral (p = 0,5) é ± "
                    f"{a.pp(a.margem_erro(0.5, len(validas)))}, contra ± 13,9 p.p. previstos para n = 50.")
 
+    limitacoes = PASTA / "limitacoes.md"
+    if limitacoes.is_file():
+        st.markdown(limitacoes.read_text(encoding="utf-8"))
+    consistencia = PASTA / "consistencia.md"
+    if consistencia.is_file():
+        st.markdown(consistencia.read_text(encoding="utf-8"))
     desvios = PASTA / "desvios.md"
     if desvios.is_file():
         st.markdown(desvios.read_text(encoding="utf-8"))

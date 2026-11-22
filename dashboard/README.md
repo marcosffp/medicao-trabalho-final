@@ -12,6 +12,8 @@ python3 -m venv .venv
 .venv/bin/streamlit run dashboard/app.py
 ```
 
+**Acesso:** o dashboard não tem link público. Ele roda localmente com os comandos acima e é demonstrado ao vivo na defesa.
+
 ## Fonte dos dados (nesta ordem)
 
 1. Arquivo CSV ou XLSX enviado na barra lateral do dashboard.
@@ -26,5 +28,6 @@ O arquivo nunca é alterado. Colunas de texto livre não são carregadas.
 
 - `app.py`: interface.
 - `analise.py`: regras de elegibilidade e descarte e toda a estatística (sem Streamlit).
+- `consistencia.md`: tabela protocolo × execução, exibida na última página, antes dos desvios.
 - `desvios.md`: tabela de desvios em relação ao protocolo da Parte 1, exibida na última página. Atualizar depois da coleta.
 - `codificacao_outra.json`: resultado da codificação das respostas "Outra" de P4 e P5.
