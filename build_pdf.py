@@ -1,7 +1,14 @@
-import subprocess, sys, markdown
-from pypdf import PdfReader
+import os, subprocess, sys
 
 src, out = sys.argv[1], sys.argv[2]
+
+# O PDF oficial do protocolo é o entregue no Canvas: protocolo/Protocolo_do_Survey_v5.pdf.
+# Este script gera um PDF com outro layout, então não pode sobrescrevê-lo nem substituí-lo.
+if "protocolo" in os.path.normpath(out).split(os.sep) or os.path.basename(out).startswith("Protocolo_do_Survey"):
+    sys.exit("Recusado: o PDF oficial do protocolo (v5, entregue) não deve ser regenerado por este script.")
+
+import markdown
+from pypdf import PdfReader
 body = markdown.markdown(open(src, encoding="utf-8").read(), extensions=["tables"])
 css = """
 @page { size: A4; margin: 1.6cm 1.7cm; }

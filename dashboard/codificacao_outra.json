@@ -1,7 +1,42 @@
 {
   "_instrucoes": "Resultado da codificação das respostas 'Outra' (Seção 5 do protocolo). Chave = texto exatamente como aparece no CSV (sem diferenciar maiúsculas); valor = opção existente ou nova categoria. Não inclua nomes de pessoas ou empresas.",
-  "P4": {},
+  "P4": {
+    "kiro": "Kiro",
+    "kiro :(": "Kiro",
+    "deepseek": "DeepSeek",
+    "deep seek": "DeepSeek",
+    "antigravity": "Outras ferramentas (Antigravity, Grok, modelos internos ou chineses)",
+    "grok": "Outras ferramentas (Antigravity, Grok, modelos internos ou chineses)",
+    "modelos internos ou chineses (kimi": "Outras ferramentas (Antigravity, Grok, modelos internos ou chineses)",
+    "glm...)": "Outras ferramentas (Antigravity, Grok, modelos internos ou chineses)"
+  },
   "P5": {
-    "Planejar código": "Planejar ou projetar código"
+    "refatoração e documentação": "Documentação e artefatos técnicos",
+    "refinamento e prototipação": "Prototipação e refinamento de escopo",
+    "implantar codigo": "Configuração, ambiente e implantação",
+    "testar aplicacoes": "Escrever testes",
+    "escrever documentacoes": "Documentação e artefatos técnicos",
+    "criar apresentacoes": "Gestão e planejamento de entregas",
+    "planejar entregas": "Gestão e planejamento de entregas",
+    "desenvolvimento de painéis de bi e consulta/análise em banco de dados": "Análise de dados e BI",
+    "escrever documentos técnicos; analisar fluxos de ponta a ponta (frontend+backend)": "Documentação e artefatos técnicos",
+    "análises complexas que me tomariam muito tempo.": "Análise de dados e BI",
+    "trabalho operacional para equipes de software": "Gestão e planejamento de entregas",
+    "criar arquivos de configuração. escrever épicos e histórias (issues). configurar ambiente.": "Configuração, ambiente e implantação",
+    "escrever/ revisar documentação de requisitos": "Documentação e artefatos técnicos",
+    "construir protótipos": "Prototipação e refinamento de escopo",
+    "refinar escopo": "Prototipação e refinamento de escopo",
+    "modelar soluções": "Planejar ou projetar código",
+    "testes automatizados": "Escrever testes",
+    "construção de artefatos": "Documentação e artefatos técnicos",
+    "outros": "Outra (não codificada)",
+    "sim": "Outra (não codificada)",
+    "geralmente para documentar o codigo": "Documentação e artefatos técnicos",
+    "tirar dúvidas": "Tirar dúvidas e gerar ideias",
+    "me ajudar a desenvolver ideias": "Tirar dúvidas e gerar ideias",
+    "validar ideias": "Tirar dúvidas e gerar ideias",
+    "usamos em todo fluxo de desenvolvimento": "Uso em todo o fluxo de desenvolvimento",
+    "desde o discovery ao deploy em prd": "Uso em todo o fluxo de desenvolvimento",
+    "definir e documentar arquitetura de novos projetos": "Planejar ou projetar código"
   }
 }

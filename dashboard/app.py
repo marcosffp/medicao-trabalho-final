@@ -140,7 +140,7 @@ st.caption("Survey com desenvolvedores no Brasil · Medição e Experimentação
 if eh_preteste:
     st.warning("Os dados carregados são do **pré-teste** (06 e 07/11/2026). Pelo protocolo, eles não entram "
                "na análise. Os números abaixo só demonstram o funcionamento do dashboard. Depois da coleta "
-               "(09 a 13/11/2026), coloque a exportação da coleta na raiz do projeto ou envie-a na barra lateral.")
+               "(11 a 20/11/2026), coloque a exportação da coleta na raiz do projeto ou envie-a na barra lateral.")
 if filtro_ativo:
     st.info(f"Filtro ativo: {len(filtrada)} de {len(validas)} respostas válidas.")
 
@@ -212,7 +212,7 @@ with abas[0]:
                 hide_index=True, width="stretch")
     n_fora = int(todas["fora_janela"].sum())
     if n_fora:
-        st.warning(f"{n_fora} resposta(s) com data e hora fora da janela de coleta (09 a 13/11/2026). "
+        st.warning(f"{n_fora} resposta(s) com data e hora fora da janela de coleta (11 a 20/11/2026). "
                    "Foram sinalizadas, não descartadas (ver Metodologia e desvios).")
 
     st.header("Perfil das respostas válidas" + (" (filtro ativo)" if filtro_ativo else ""))
@@ -409,6 +409,24 @@ with abas[3]:
         fig.update_layout(height=420)
         st.plotly_chart(fig, width="stretch")
         st.caption("U1 e U2 não formam construto (Seção 3), por isso não têm alfa.")
+        # Protocolo v5, Seção 3
+        st.subheader("Checagens previstas no protocolo (Seção 3)")
+        if len(filtrada) >= 3:
+            mi = a.media_itens_vs_ppmed(filtrada)
+            st.markdown(f"**Exploratório:** média dos cinco itens (PP5 recodificado) = {a.fmt(mi['media'], 2)} "
+                        f"(DP {a.fmt(mi['dp'], 2)}); Spearman com PP_med: ρ = {a.fmt(mi['rho'])}, p = {a.fmt_p(mi['p'])}, n = {mi['n']}. "
+                        "O alfa é indício indireto: PP_med é a mediana, não o escore somado.")
+            if np.isfinite(c["alfa"]) and c["alfa"] < 0.70:
+                st.warning(f"α = {a.fmt(c['alfa'])} está abaixo de 0,70, a decisão prévia do protocolo. A limitação é declarada e "
+                           "as subescalas de rapidez e qualidade são analisadas à parte, como sensibilidade. "
+                           "PP5 **não** foi excluído: permanece em PP_med em todas as análises confirmatórias (retirá-lo seria um desvio).")
+                st.dataframe(a.sensibilidade_subescalas(filtrada), hide_index=True, width="stretch",
+                             column_config={"p bruto": st.column_config.NumberColumn(format="%.4f")})
+                st.caption("Escore da subescala = média dos dois itens. Exploratório, sem correção para múltiplas comparações.")
+            if not c["itens"].empty:
+                r5 = c["itens"].set_index("Item").loc["PP5r"]
+                st.caption(f"Só descritivo: correlação item-total corrigida de PP5 = {a.fmt(r5['Correlação item-total corrigida'])}; "
+                           f"alfa sem PP5 = {a.fmt(r5['Alfa se o item for removido'])}.")
 
 # --------------------------------------------------------------------------
 # 5. Segmentos e exploratórias
@@ -460,7 +478,8 @@ with abas[4]:
             st.plotly_chart(fig, width="stretch")
         if cmp_["teste"]:
             st.markdown(f"**{cmp_['teste']}:** estatística = {a.fmt(cmp_['estatistica'], 2)}, p = {a.fmt_p(cmp_['p'])}, "
-                        f"{cmp_['efeito_nome']} = {a.fmt(cmp_['efeito'])}, n = {cmp_['n']}.")
+                        f"{cmp_['efeito_nome']} = {a.fmt(cmp_['efeito'])} "
+                        f"(IC 95% bootstrap [{a.fmt(cmp_['ic'][0], 2)}; {a.fmt(cmp_['ic'][1], 2)}]), n = {cmp_['n']}.")
         else:
             st.info(f"Teste não aplicado: {cmp_['motivo']}.")
         if col in ("T2",):
@@ -468,10 +487,11 @@ with abas[4]:
             if q.get("motivo"):
                 st.caption(f"χ² não aplicado: {q['motivo']}.")
             else:
-                st.markdown(f"**χ² (segmento × classe de PP_med):** χ² = {a.fmt(q['chi2'], 2)}, gl = {q['gl']}, "
-                            f"p = {a.fmt_p(q['p'])}, V de Cramér = {a.fmt(q['v'])}.")
+                st.markdown(f"**{q['metodo']} (segmento × classe de PP_med):** p = {a.fmt_p(q['p'])}, "
+                            f"V de Cramér = {a.fmt(q['v'])} (IC 95% bootstrap [{a.fmt(q['ic'][0], 2)}; {a.fmt(q['ic'][1], 2)}]).")
                 if q["esperado_baixo"]:
-                    st.caption("Há frequências esperadas abaixo de 5: o χ² é pouco confiável aqui.")
+                    st.caption("Há frequências esperadas abaixo de 5, então, como no protocolo, vale o teste exato "
+                               "(Fisher; Freeman-Halton por Monte Carlo em tabelas maiores que 2×2) no lugar do χ².")
 
         st.divider()
         e1, e2 = st.columns(2)
@@ -480,7 +500,8 @@ with abas[4]:
             kw = a.comparar_grupos(v, "faixa_agrupada")
             if kw["teste"]:
                 st.markdown(f"{kw['teste']} = {a.fmt(kw['estatistica'], 2)}, p = {a.fmt_p(kw['p'])}, "
-                            f"{kw['efeito_nome']} = {a.fmt(kw['efeito'])}, n = {kw['n']}.")
+                            f"{kw['efeito_nome']} = {a.fmt(kw['efeito'])} "
+                            f"(IC 95% bootstrap [{a.fmt(kw['ic'][0], 2)}; {a.fmt(kw['ic'][1], 2)}]), n = {kw['n']}.")
             else:
                 st.info(f"Não aplicado: {kw['motivo']}.")
         with e2:
@@ -509,13 +530,14 @@ with abas[4]:
 with abas[5]:
     st.header("Metodologia")
     st.markdown("""
-- **Desenho:** survey transversal, amostra não probabilística (conveniência com bola de neve), desenvolvedores no Brasil que usaram assistente de IA nos últimos 3 meses. Coleta de 09 a 13/11/2026 via Google Formulários.
+- **Desenho:** survey transversal, amostra não probabilística (conveniência com bola de neve), desenvolvedores no Brasil que usaram assistente de IA nos últimos 3 meses. Coleta via Google Formulários, prevista para 11 a 20/11/2026 e realizada de 13 a 19/11/2026 (desvio D3).
 - **Encerramento (inelegíveis):** C0 = não, T1 = não ou U1 = 1. **Descarte:** AT1 diferente de "Discordo" ou item obrigatório em branco. Linha reta (cinco itens PP iguais) só é sinalizada e testada em sensibilidade.
 - **Variável de resposta:** PP_med, mediana de PP1 a PP5 com PP5 recodificado (6 − x). Ordinal: sem média, teste t ou Pearson.
-- **RQ1:** teste do sinal exato contra o neutro 3, sem empates; efeito = proporção de PP_med ≥ 4 com IC de Clopper-Pearson.
-- **RQ2 e RQ3:** Spearman (U1 × PP_med e P1 × PP_med), p pela aproximação t conferido por permutação; IC de ρ por bootstrap. Leitura de ρ por Cohen (0,1 / 0,3 / 0,5).
+- **RQ1:** teste do sinal exato contra o neutro 3, sem empates; efeito = proporção de PP_med ≥ 4 entre os não empatados com IC de Clopper-Pearson; margem de erro pela fórmula do enunciado sobre a proporção de PP_med ≥ 4 entre todos os usuários válidos.
+- **RQ2 e RQ3:** Spearman (U1 × PP_med e P1 × PP_med) com postos médios; p pela aproximação t, e o p por permutação (10.000) prevalece se os dois divergirem na decisão; IC de ρ por bootstrap percentil (10.000). Leitura de ρ por Cohen (0,1 / 0,3 / 0,5).
 - **Família confirmatória:** 3 testes bicaudais, α = 0,05, correção de Holm.
 - **Margem de erro:** e = 1,96 × √(p(1 − p)/n), referência de precisão (a amostra não é probabilística).
+- **Protocolo de referência:** `Protocolo_do_Survey_v5.pdf`, enviado no Canvas (versão final entregue).
 - **Ética:** sem dados identificáveis; texto livre não é carregado; segmentos com menos de 5 pessoas não são exibidos.
 """)
     st.header("Checagens automáticas sobre os dados carregados")
@@ -532,7 +554,7 @@ with abas[5]:
         ("Empates em PP_med = 3 (RQ1)", "cerca de 20%",
          f"{empates} ({a.pct(empates / len(validas)) if len(validas) else '–'})", "Informativo"),
         ("Faixas de P1 agrupadas (< 5 pessoas)", "agrupar com a vizinha", "; ".join(agrupadas) or "nenhuma", "Conforme o protocolo"),
-        ("Respostas fora de 09 a 13/11/2026", "0", str(int(todas["fora_janela"].sum())),
+        ("Respostas fora de 11 a 20/11/2026", "0", str(int(todas["fora_janela"].sum())),
          "OK" if not todas["fora_janela"].any() else "Sinalizadas"),
         ("Marcações 'Outra' sem codificação (P4 + P5)", "0 após a codificação", str(outras),
          "OK" if outras == 0 else "Pendente (D2)"),

@@ -22,13 +22,13 @@ ALPHA = 0.05
 Z95 = 1.96
 N_META = 50
 MIN_SEGMENTO = 5  # Seção 6: não exibir segmentos com menos de 5 pessoas
-JANELA_COLETA = (pd.Timestamp("2026-11-09 00:00:00"), pd.Timestamp("2026-11-13 23:59:59"))
+JANELA_COLETA = (pd.Timestamp("2026-11-11 00:00:00"), pd.Timestamp("2026-11-20 23:59:59"))
 
 # DECISÃO OPERACIONAL: o protocolo cita permutação e bootstrap sem fixar
 # número de reamostragens nem semente. Fixamos para o resultado ser reprodutível.
 SEMENTE = 20261109
 N_PERMUTACOES = 10_000
-N_BOOTSTRAP = 5_000
+N_BOOTSTRAP = 10_000  # protocolo v5, Seção 5
 
 PP_ITENS = ["PP1", "PP2", "PP3", "PP4", "PP5"]
 PP_TEXTO = {
@@ -62,7 +62,7 @@ OPCOES_P2 = [
     "Mais de 1000 pessoas",
     "Não se aplica (trabalho autônomo)",
 ]
-OPCOES_P3 = ["Menos de 3 meses", "3 a 6 meses", "6 a 12 meses", "Mais de 12 meses"]
+OPCOES_P3 = ["Menos de 3 meses", "De 3 a menos de 6 meses", "De 6 a menos de 12 meses", "12 meses ou mais"]  # rótulos do formulário v5
 OPCOES_P4 = ["ChatGPT", "GitHub Copilot", "Claude", "Gemini", "Cursor"]
 OPCOES_P5 = [
     "Escrever código",
@@ -217,6 +217,7 @@ def preparar(bruto: pd.DataFrame, codificacao: dict | None = None) -> DadosPrepa
         out[item] = d[item].replace("", None)
 
     status, motivos = [], []
+    ultima_assinatura = None
     for i in d.index:
         r = d.loc[i]
         m: list[str] = []
@@ -225,6 +226,8 @@ def preparar(bruto: pd.DataFrame, codificacao: dict | None = None) -> DadosPrepa
             m.append("C0: não consentiu ou tem menos de 18 anos")
         elif r["T1"] != "Sim":
             m.append("T1: não trabalha hoje com desenvolvimento no Brasil")
+        elif r["T2"].casefold().startswith("outro"):
+            m.append('T2 = "outro": vínculo fora de emprego, estágio ou autônomo')
         elif out.at[i, "U1"] == 1:
             m.append("U1 = 1: não usou assistente de IA nos últimos 3 meses")
         if m:
@@ -242,6 +245,12 @@ def preparar(bruto: pd.DataFrame, codificacao: dict | None = None) -> DadosPrepa
         if r["AT1"] != "" and at1 != 2:
             marcado = LIKERT.get(int(at1), r["AT1"]) if pd.notna(at1) else r["AT1"]
             m.append(f"AT1 diferente de 'Discordo' (marcou '{marcado}')")
+        # Protocolo v5, Seção 3: respostas idênticas em todos os itens e enviadas em sequência
+        itens_chave = ["T2", "U1", "U2", "P1", "P2", "P3", "P4", "P5", *PP_ITENS, "AT1"]
+        assinatura = tuple(r[k] for k in itens_chave)
+        if ultima_assinatura is not None and assinatura == ultima_assinatura:
+            m.append("Resposta repetida em sequência (idêntica à anterior)")
+        ultima_assinatura = assinatura
         if m:
             status.append("Descartada")
             motivos.append("; ".join(m))
@@ -360,12 +369,14 @@ def teste_rq1(v: pd.DataFrame) -> Resultado:
     res = stats.binomtest(acima, n_eff, 0.5, alternative="two-sided")
     ic = res.proportion_ci(confidence_level=0.95, method="exact")
     prop = acima / n_eff
-    margem = margem_erro(prop, n_eff)
-    pior = margem_erro(0.5, n_eff)
-    texto = f"± {_pp(margem)} com p observado ({_pct(prop)}, n = {n_eff}); pior caso p = 0,5: ± {_pp(pior)}"
-    if prop in (0.0, 1.0):
-        notas.append("Com proporção observada de 0% ou 100% a fórmula do enunciado dá margem zero; "
-                     "use o pior caso e o IC de Clopper-Pearson como referência de precisão.")
+    # Protocolo v5, Seção 2: a margem da RQ1 é a da proporção de PP_med ≥ 4 entre TODOS os usuários válidos.
+    prop_todos = acima / len(v)
+    margem = margem_erro(prop_todos, len(v))
+    pior = margem_erro(0.5, len(v))
+    texto = (f"± {_pp(margem)} (proporção de PP_med ≥ 4 entre todos os usuários válidos: {_pct(prop_todos)}, "
+             f"n = {len(v)}); pior caso p = 0,5: ± {_pp(pior)}")
+    notas.append("Para a proporção entre os não empatados o intervalo relatado é o de Clopper-Pearson "
+                 "(a fórmula do enunciado não vale perto de 0% ou 100%).")
     return Resultado("RQ1", "A produtividade percebida difere do ponto neutro da escala?",
                      "Teste do sinal exato (binomial, p = 0,5 sob H0), bicaudal",
                      n_eff, "k (acima do neutro)", float(acima), float(res.pvalue),
@@ -429,8 +440,13 @@ def _teste_spearman(rq: str, pergunta: str, v: pd.DataFrame, col_x: str, nome_x:
     if s["motivo"]:
         notas.append(f"Não calculável: {s['motivo']}.")
     margem = margem_erro(0.5, s["n"])
+    p_conf = s["p_t"]
+    if pd.notna(s["p_perm"]) and pd.notna(p_conf) and ((p_conf < ALPHA) != (s["p_perm"] < ALPHA)):
+        # Protocolo v5, Seção 5: a permutação prevalece sobre a aproximação t se os dois divergirem
+        p_conf = s["p_perm"]
+        notas.append("A aproximação t e a permutação divergem na decisão: vale o p por permutação (protocolo v5).")
     return Resultado(rq, pergunta, f"Correlação de Spearman ({nome_x} × PP_med), postos médios, bicaudal",
-                     s["n"], "ρ de Spearman", s["rho"], s["p_t"], "ρ de Spearman", s["rho"], s["ic"],
+                     s["n"], "ρ de Spearman", s["rho"], p_conf, "ρ de Spearman", s["rho"], s["ic"],
                      f"bootstrap percentil 95% ({milhar(N_BOOTSTRAP)} reamostras)",
                      margem, f"± {_pp(margem)} (margem geral da amostra, p = 0,5, n = {s['n']})",
                      leitura_cohen(s["rho"]), notas=notas)
@@ -533,32 +549,91 @@ def agrupar_faixas(contagens: pd.Series) -> dict[str, str]:
     return mapa
 
 
+def _pct_ic(valores) -> tuple[float, float]:
+    v = np.asarray(valores, dtype=float)
+    v = v[np.isfinite(v)]
+    return (float(np.percentile(v, 2.5)), float(np.percentile(v, 97.5))) if v.size else (np.nan, np.nan)
+
+
+def _ic_cliff(y: np.ndarray, grupo_a: np.ndarray, semente: int = SEMENTE) -> tuple[float, float]:
+    """IC bootstrap percentil do δ de Cliff (A vs B), vetorizado."""
+    idx = np.random.default_rng(semente).integers(0, len(y), size=(N_BOOTSTRAP, len(y)))
+    yy, ga = y[idx], grupo_a[idx]
+    r = stats.rankdata(yy, axis=1)
+    n1 = ga.sum(axis=1)
+    n2 = yy.shape[1] - n1
+    with np.errstate(invalid="ignore", divide="ignore"):
+        u = (r * ga).sum(axis=1) - n1 * (n1 + 1) / 2
+        delta = 2 * u / (n1 * n2) - 1
+    return _pct_ic(delta)
+
+
+def _ic_eps2(y: np.ndarray, cod: np.ndarray, k: int, semente: int = SEMENTE) -> tuple[float, float]:
+    """IC bootstrap percentil de ε² = H/(n − 1) (H com correção de empates), vetorizado."""
+    idx = np.random.default_rng(semente).integers(0, len(y), size=(N_BOOTSTRAP, len(y)))
+    yy, gg = y[idx], cod[idx]
+    n = yy.shape[1]
+    r = stats.rankdata(yy, axis=1)
+    soma = np.zeros(len(yy))
+    vazio = np.zeros(len(yy), dtype=bool)
+    for j in range(k):
+        m = gg == j
+        nj = m.sum(axis=1)
+        vazio |= nj == 0
+        soma += np.where(nj > 0, (r * m).sum(axis=1) ** 2 / np.maximum(nj, 1), 0)
+    h = 12 / (n * (n + 1)) * soma - 3 * (n + 1)
+    t = sum((yy == val).sum(axis=1) ** 3 - (yy == val).sum(axis=1) for val in np.unique(y))
+    with np.errstate(invalid="ignore", divide="ignore"):
+        eps = (h / (1 - t / (n**3 - n))) / (n - 1)
+    eps[vazio] = np.nan
+    return _pct_ic(eps)
+
+
 def comparar_grupos(v: pd.DataFrame, col_grupo: str, col_y: str = "PP_med") -> dict:
-    """Mann-Whitney (2 grupos) ou Kruskal-Wallis (3+), só com grupos de ≥ 5 pessoas."""
+    """Mann-Whitney com δ de Cliff (2 grupos) ou Kruskal-Wallis com ε² (3+), só com grupos de ≥ 5 pessoas.
+
+    Protocolo v5, Seção 5: efeitos exploratórios com IC de 95% por bootstrap percentil."""
     dados = v[[col_grupo, col_y]].dropna()
     tamanhos = dados.groupby(col_grupo, observed=True).size()
     usados = tamanhos[tamanhos >= MIN_SEGMENTO].index.tolist()
     excluidos = tamanhos[tamanhos < MIN_SEGMENTO].index.tolist()
-    grupos = [dados.loc[dados[col_grupo] == g, col_y].to_numpy() for g in usados]
+    dados = dados[dados[col_grupo].isin(usados)]
+    grupos = [dados.loc[dados[col_grupo] == g, col_y].to_numpy(dtype=float) for g in usados]
     base = {"usados": usados, "excluidos": excluidos, "tamanhos": tamanhos}
     if len(grupos) < 2:
         return base | {"teste": None, "motivo": "menos de 2 grupos com 5 ou mais pessoas"}
     n = sum(len(g) for g in grupos)
+    y = dados[col_y].to_numpy(dtype=float)
     try:
         if len(grupos) == 2:
             u, p = stats.mannwhitneyu(grupos[0], grupos[1], alternative="two-sided")
-            r_rb = 2 * u / (len(grupos[0]) * len(grupos[1])) - 1
+            delta = 2 * u / (len(grupos[0]) * len(grupos[1])) - 1  # = δ de Cliff (A vs B)
+            ic = _ic_cliff(y, (dados[col_grupo] == usados[0]).to_numpy())
             return base | {"teste": "Mann-Whitney U", "estatistica": float(u), "p": float(p),
-                           "efeito_nome": f"correlação rank-biserial ({usados[0]} vs {usados[1]})",
-                           "efeito": float(r_rb), "n": n, "motivo": ""}
+                           "efeito_nome": f"δ de Cliff ({usados[0]} vs {usados[1]})",
+                           "efeito": float(delta), "ic": ic, "n": n, "motivo": ""}
         h, p = stats.kruskal(*grupos)
+        cod = dados[col_grupo].map({g: i for i, g in enumerate(usados)}).to_numpy()
         return base | {"teste": "Kruskal-Wallis H", "estatistica": float(h), "p": float(p),
-                       "efeito_nome": "ε² = H / (n − 1)", "efeito": float(h / (n - 1)), "n": n, "motivo": ""}
+                       "efeito_nome": "ε² = H / (n − 1)", "efeito": float(h / (n - 1)),
+                       "ic": _ic_eps2(y, cod, len(usados)), "n": n, "motivo": ""}
     except ValueError as exc:  # todos os valores iguais
         return base | {"teste": None, "motivo": f"teste não calculável ({exc})"}
 
 
-def qui_quadrado(v: pd.DataFrame, col_grupo: str) -> dict:
+def _v_cramer(tab: np.ndarray) -> float:
+    n = tab.sum()
+    esp = np.outer(tab.sum(axis=1), tab.sum(axis=0)) / n
+    with np.errstate(invalid="ignore", divide="ignore"):
+        chi2 = np.nansum(np.where(esp > 0, (tab - esp) ** 2 / esp, 0))
+    return float(np.sqrt(chi2 / (n * (min(tab.shape) - 1))))
+
+
+def qui_quadrado(v: pd.DataFrame, col_grupo: str, semente: int = SEMENTE) -> dict:
+    """χ² quando todas as frequências esperadas são ≥ 5; senão Fisher (Freeman-Halton em tabelas > 2×2).
+
+    Protocolo v5, Seção 5. DECISÃO OPERACIONAL: o teste exato de tabelas maiores que 2×2 é calculado por
+    Monte Carlo (10.000 permutações dos rótulos), pois o SciPy só traz o exato 2×2. Efeito: V de Cramér com IC bootstrap."""
     dados = v[[col_grupo, "classe_PP"]].dropna()
     tamanhos = dados.groupby(col_grupo, observed=True).size()
     usados = tamanhos[tamanhos >= MIN_SEGMENTO].index.tolist()
@@ -567,11 +642,74 @@ def qui_quadrado(v: pd.DataFrame, col_grupo: str) -> dict:
     tab = tab.loc[:, tab.sum() > 0]
     if tab.shape[0] < 2 or tab.shape[1] < 2:
         return {"tabela": tab, "motivo": "tabela com menos de 2 linhas ou colunas"}
-    chi2, p, gl, esperado = stats.chi2_contingency(tab)
-    n = tab.to_numpy().sum()
-    v_cramer = np.sqrt(chi2 / (n * (min(tab.shape) - 1)))
-    return {"tabela": tab, "chi2": float(chi2), "p": float(p), "gl": int(gl), "v": float(v_cramer),
-            "esperado_baixo": bool((esperado < 5).any()), "motivo": ""}
+    chi2, p_chi, gl, esperado = stats.chi2_contingency(tab)
+    arr = tab.to_numpy().astype(float)
+    n = arr.sum()
+    v_obs = float(np.sqrt(chi2 / (n * (min(tab.shape) - 1))))
+    exato = bool((esperado < 5).any())
+    if not exato:
+        p, metodo = float(p_chi), "χ² de independência"
+    elif tab.shape == (2, 2):
+        p, metodo = float(stats.fisher_exact(arr)[1]), "teste exato de Fisher (2×2)"
+    else:
+        rng = np.random.default_rng(semente)
+        x = pd.Categorical(dados[col_grupo]).codes
+        z = pd.Categorical(dados["classe_PP"]).codes
+        kx, kz = tab.shape[0], len(np.unique(z))
+        zc = np.unique(z)
+        remap = {c: i for i, c in enumerate(zc)}
+        z = np.array([remap[c] for c in z])
+        from scipy.special import gammaln
+
+        def logp(zz):
+            t = np.bincount(x * kz + zz, minlength=kx * kz)
+            return -gammaln(t + 1).sum()
+        lp0 = logp(z)
+        cont = sum(logp(rng.permutation(z)) <= lp0 + 1e-9 for _ in range(N_PERMUTACOES))
+        p, metodo = float((cont + 1) / (N_PERMUTACOES + 1)), "teste exato de Fisher-Freeman-Halton (Monte Carlo)"
+    # IC bootstrap do V de Cramér
+    rng = np.random.default_rng(semente)
+    x = pd.Categorical(dados[col_grupo]).codes
+    zc = pd.Categorical(dados["classe_PP"]).codes
+    kx = tab.shape[0]
+    kz = int(zc.max()) + 1
+    vs = []
+    for _ in range(N_BOOTSTRAP):
+        ii = rng.integers(0, len(x), len(x))
+        t = np.bincount(x[ii] * kz + zc[ii], minlength=kx * kz).reshape(kx, kz).astype(float)
+        t = t[t.sum(axis=1) > 0][:, t.sum(axis=0) > 0]
+        if t.shape[0] >= 2 and t.shape[1] >= 2:
+            vs.append(_v_cramer(t))
+    return {"tabela": tab, "chi2": float(chi2), "p": p, "gl": int(gl), "v": v_obs, "ic": _pct_ic(vs),
+            "metodo": metodo, "esperado_baixo": exato, "motivo": ""}
+
+
+def sensibilidade_subescalas(v: pd.DataFrame) -> pd.DataFrame:
+    """Protocolo v5, Seção 3: com α < 0,70, as subescalas de rapidez (PP1, PP2) e qualidade (PP3, PP4)
+    são analisadas à parte, como sensibilidade (escore = média dos dois itens; PP5 não é excluído da análise principal)."""
+    sub = {"Rapidez (PP1, PP2)": ["PP1", "PP2"], "Qualidade (PP3, PP4)": ["PP3", "PP4"]}
+    linhas = []
+    for nome, itens in sub.items():
+        esc = v[itens].mean(axis=1)
+        acima, abaixo = int((esc > 3).sum()), int((esc < 3).sum())
+        n_eff = acima + abaixo
+        if n_eff:
+            p1 = float(stats.binomtest(acima, n_eff, 0.5).pvalue)
+            linhas.append({"Subescala": nome, "RQ": "RQ1 (sinal vs. 3)", "n": n_eff,
+                           "Estatística": f"k = {acima}", "p bruto": p1,
+                           "Efeito": f"{acima / n_eff:.3f} acima do neutro"})
+        for rq, col in [("RQ2 (U1)", "U1"), ("RQ3 (P1)", "P1")]:
+            r, p = stats.spearmanr(v[col], esc)
+            linhas.append({"Subescala": nome, "RQ": rq, "n": int(v[[col]].notna().sum().iloc[0]),
+                           "Estatística": f"ρ = {r:.3f}", "p bruto": float(p), "Efeito": f"ρ = {r:.3f} ({leitura_cohen(r)})"})
+    return pd.DataFrame(linhas)
+
+
+def media_itens_vs_ppmed(v: pd.DataFrame) -> dict:
+    """Protocolo v5, Seção 3: checagem exploratória, média dos cinco itens (PP5 recodificado) e Spearman com PP_med."""
+    media = v[["PP1", "PP2", "PP3", "PP4", "PP5r"]].mean(axis=1)
+    r, p = stats.spearmanr(media, v["PP_med"])
+    return {"media": float(media.mean()), "dp": float(media.std(ddof=1)), "rho": float(r), "p": float(p), "n": len(v)}
 
 
 # --------------------------------------------------------------------------
