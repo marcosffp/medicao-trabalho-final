@@ -6,7 +6,7 @@ Apoio para C5 (2,0 pts). Os números abaixo foram recalculados em 22/11/2026 (`d
 
 - [ ] Dashboard aberto em https://survey-ia-medicao-es.streamlit.app/ **e** local (`streamlit run dashboard/app.py`) como reserva.
 - [ ] Painel do Google Formulários aberto com a conta do dono, logada e testada (nunca exibir e-mails de respondentes). Deve mostrar 90 respostas e o formulário fechado.
-- [ ] Export bruto, `SHA256SUMS.txt`, print do Canvas (13/11 9:17) e print do convite (17/11) à mão.
+- [ ] Export bruto, `SHA256SUMS.txt`, print do Canvas (13/11 9:17) e prints de divulgação (16 e 17/11, `docs/evidencias/divulgacao/`) à mão.
 - [ ] Plano B offline: PDF com prints das 6 abas, caso a internet caia.
 - [ ] Dois ensaios com cronômetro (registrar na seção 6).
 
@@ -15,7 +15,7 @@ Apoio para C5 (2,0 pts). Os números abaixo foram recalculados em 22/11/2026 (`d
 | Tempo | Conteúdo | Quem fala |
 |---|---|---|
 | 0:00–2:00 | Tema, objetivo GQM em uma frase e as 3 RQs; aba "Perfil da amostra": 90 recebidas, 11 inelegíveis (T1), 10 descartadas (AT1), 69 válidas, mínimo de 50 atendido | **Marcos** |
-| 2:00–3:15 | Evidências: painel do Forms (90 respostas), export com carimbos, hash, print do Canvas, print do convite. **Declarar a lacuna D8 antes de ser perguntado** | **Brenda** |
+| 2:00–3:15 | Evidências: painel do Forms (90 respostas), export com carimbos, hash, print do Canvas, prints de divulgação de 16 e 17/11. **Declarar a lacuna D8 antes de ser perguntado** | **Brenda** |
 | 3:15–4:30 | Aba "Itens Likert" (divergente, PP5 recodificado) e aba "Confiabilidade" (α = 0,675, abaixo de 0,70, declarado) | **Bernardo** |
 | 4:30–6:30 | RQ1, RQ2, RQ3: teste, p, efeito, margem, conclusão. **Filtro por segmento ao vivo** (ex.: tempo de experiência) | **Gabriel** |
 | 6:30–8:00 | Desvios D1 a D8, limitações e ameaças; síntese em 3 frases e abertura para a mudança de cenário | **Gabriela** |
@@ -78,7 +78,7 @@ Os 8 minutos deixam folga dentro dos 10 da Fonte. Se o professor pedir para este
 19. **O que não se pode concluir.** Nada sobre todos os desenvolvedores do Brasil (conveniência). Nada causal (transversal: RQ2 pode ter causalidade reversa). Nada sobre produtividade real, só percebida. Nada sobre RQ3: é inconclusiva.
 20. **O que faríamos diferente.** Guardar o print de cada convite na hora, usar mais de um canal, ter segundo codificador para "Outra", manter o texto neutro do convite do protocolo e distribuir a coleta em mais dias.
 
-**Se perguntarem de onde vieram as 22 respostas de 13 e 16/11:** só temos o carimbo (prova **quando**, não **de onde**) e o print de 17/11 (grupo de trabalho). Declarado em D8. **Não inventar origem.**
+**Se perguntarem de onde vieram as respostas de 13 e 16/11:** temos o carimbo (prova **quando**, não **de onde**) e os prints dos envios de 16/11 (grupos e mensagens individuais de WhatsApp, 13:09, 13:27, 18:34, 18:41 e 18:44) e de 17/11. 12 das 21 respostas de 16/11 chegaram em até ~20 min depois de um envio; a relação é temporal, o formulário não guarda origem. Sem print: a resposta de 13/11 e 9 de 16/11. Declarado em D8. **Não inventar origem.**
 
 ## 5. Mudança de cenário (Fonte 9.2): estrutura e respostas rápidas
 

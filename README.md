@@ -50,7 +50,7 @@ d=a.preparar(a.ler_arquivo(f,f), json.load(open('codificacao_outra.json'))); \
 | `dashboard/codificacao_outra.json` | Codificação das respostas "Outra" de P4 e P5 |
 | `docs/codebook.md` | Itens, variáveis, escalas e codificação |
 | `docs/regras_de_limpeza.md` | Critérios de encerramento e descarte |
-| `docs/evidencias/` | Prints datados (Canvas e divulgação) e revisão de privacidade |
+| `docs/evidencias/` | Prints datados (Canvas e divulgação, em `divulgacao/`) e revisão de privacidade |
 | `docs/ENTREGA.md` | Pacote de entrega e verificação final |
 | `docs/dashboard_offline.pdf` | Plano B offline: capturas das 6 abas do dashboard |
 | `docs/defesa.md` | Roteiro de 10 minutos, respostas-chave da arguição e cenários |

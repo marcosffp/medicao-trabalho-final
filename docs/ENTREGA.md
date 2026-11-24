@@ -1,6 +1,6 @@
 # Pacote de entrega (Canvas) e verificação final
 
-**Formato do envio:** a Fonte (seção 13, item 1) deixa em aberto o que subir. Sugestão: um PDF com (1) link do dashboard e do repositório, (2) prints das 6 páginas, (3) evidências sem dados pessoais (print do Canvas de 13/11 e do convite de 17/11), (4) tabela de consistência e desvios D1 a D8. **Confirmar com o professor** se também quer o repositório.
+**Formato do envio:** a Fonte (seção 13, item 1) deixa em aberto o que subir. Sugestão: um PDF com (1) link do dashboard e do repositório, (2) prints das 6 páginas, (3) evidências sem dados pessoais (print do Canvas de 13/11 e prints de divulgação de 16 e 17/11), (4) tabela de consistência e desvios D1 a D8. **Confirmar com o professor** se também quer o repositório.
 
 | Item | Valor |
 |---|---|
@@ -14,10 +14,12 @@
 - Hash do XLSX confere. RQ1 a RQ3 e α conferidos por segunda implementação.
 
 ## Ainda manual
-- [ ] Prints/evidências de divulgação de 13 e 16/11 (pendência de evidência, declarada em D8).
+- [x] Prints de divulgação de 16/11 (3 grupos de WhatsApp e 2 mensagens individuais) e 17/11 (3 mensagens), recebidos dos integrantes em 23 e 24/11, tarjados e salvos em `docs/evidencias/divulgacao/`. D8, D4, `consistencia.md` e `limitacoes.md` atualizados. **Sem evidência até hoje:** convites de 13/11 (1 resposta, 20:46) e 9 respostas de 16/11 fora das janelas dos prints.
+- [x] `docs/dashboard_offline.pdf` regerado em 24/11 (22 páginas, tema escuro, com D4 e D8 atualizados), a partir do dashboard local com o XLSX oficial.
+- [x] Tarjas dos prints conferidas visualmente em 24/11 (nomes, telefones e avatares cobertos).
 - [x] Painel do Google Formulários aberto pelo dono em 22/11: **90 respostas**, igual ao export. Formulário **fechado** para novas respostas em 22/11 (a coleta terminou em 19/11 17:50; o fechamento formal veio depois).
 - [x] (histórico) Abrir o painel do Google Formulários com a conta do **dono** (a ferramenta já está confirmada; falta só testar o acesso ao painel e à aba de respostas). Conferir também se o formulário está **fechado** para novas respostas, para que o painel não mostre mais que as 90 do export.
-- [x] PDF offline com prints das 6 abas: `docs/dashboard_offline.pdf` (12 páginas, gerado em 22/11 a partir do dashboard com o XLSX oficial; sem dados pessoais). Regerar se o código ou os dados mudarem.
+- [x] PDF offline com prints das 6 abas: `docs/dashboard_offline.pdf` (gerado em 22/11, regerado em 24/11 a partir do dashboard com o XLSX oficial; sem dados pessoais). Regerar se o código ou os dados mudarem.
 - [x] PDF do protocolo conferido contra o `.md` em 22/11: mesmo texto (só quebras de linha e formatação diferem). As datas do PDF (entrega 10/11, abertura 11/11) são as planejadas; a divergência está em D6.
 - [ ] Enviar a mensagem ao professor (modelo no fim deste arquivo) e anotar a resposta aqui.
 - [ ] Definir responsáveis em `docs/defesa.md` e ensaiar com cronômetro.

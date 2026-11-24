@@ -47,3 +47,20 @@ Mudar a visibilidade ou reescrever o histórico altera o repositório compartilh
 **Risco que permanece:** o arquivo traz o carimbo de data/hora e as respostas em texto livre de P4 e P5 ("Outra"). A combinação de carimbo, perfil e P1 pode, em redes pequenas, ajudar a identificar alguém (risco citado na Seção 6 do protocolo). Já está declarado em D1 (`dashboard/desvios.md`).
 
 **Para o grupo:** decisão **confirmada pelo grupo em 22/11/2026**. Se preferirem remover o XLSX do Git, será preciso trocar a leitura do dashboard (upload manual ou arquivo privado) e republicar o link.
+
+## Prints de divulgação de 16 e 17/11 (24/11/2026)
+
+Os integrantes enviaram os prints de celular e de computador. Há duas versões de cada um:
+
+- **Para entrega:** `docs/evidencias/divulgacao/` (cópias tarjadas, sem dados pessoais).
+- **Originais sem tarja:** `docs/evidencias/originais_sem_tarja/` (**ignorada pelo Git**; não subir no Canvas nem no repositório). Os nomes são os mesmos das cópias tarjadas, com extensão `.jpeg`.
+
+Nas cópias tarjadas, tapei nomes e telefones de terceiros, avatares, nomes de grupos e um primeiro nome citado em mensagem individual.
+
+| Arquivo (em `divulgacao/`) | O que mostra | Tarjas |
+|---|---|---|
+| `divulgacao_2026-11-16_1841_individual.jpg`, `..._1844_individual.jpg` | Mensagem individual com o link, 16/11 às 18:41 e 18:44 | Primeiro nome do destinatário (1844) |
+| `divulgacao_2026-11-16_1309_grupo.jpg`, `..._1327_grupo.jpg`, `..._1834_grupo.jpg` | Envio em três grupos, 16/11 às 13:09, 13:27 e 18:34 | Cabeçalho (nome do grupo e participantes), avatares, nomes e telefones de quem respondeu, trechos de conversa alheia |
+| `divulgacao_2026-11-17_1006_a.jpg`, `..._1006_b.jpg`, `divulgacao_2026-11-17_1344.jpg` | Mensagem de divulgação, 17/11 às 10:06 (duas capturas do mesmo envio) e 13:44 | Nenhuma (só o texto enviado; o chat não aparece) |
+
+Resta a conferência visual final antes do envio. Os prints mostram respostas de terceiros ("Respondido", "respondo"); sem nome ou telefone, não identificam ninguém.
