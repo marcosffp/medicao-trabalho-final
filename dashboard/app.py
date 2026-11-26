@@ -816,21 +816,38 @@ with aba_dashboard:
         res = confirmatorios(v)
         sufixo = " · segmento" if filtro_ativo else ""
         q = st.columns(3)
+        COR_CLASSE = {a.CLASSES_PP[0]: "#ef8a62", a.CLASSES_PP[1]: "#bdbdbd", a.CLASSES_PP[2]: "#2166ac"}
+
+        def empilhado(grupos: pd.Series, ordem: list, rotulos: dict | None = None) -> go.Figure:
+            """Barras 100% empilhadas: % de cada classe de PP_med dentro de cada grupo (com o n do grupo)."""
+            fig = go.Figure()
+            nomes = [f"{(rotulos or {}).get(g, g)}  (n = {int((grupos == g).sum())})" for g in ordem]
+            for cls in a.CLASSES_PP:
+                pct = [((v.loc[grupos == g, "classe_PP"] == cls).mean() * 100 if (grupos == g).any() else 0) for g in ordem]
+                fig.add_bar(y=nomes, x=pct, orientation="h", name=cls, marker_color=COR_CLASSE[cls],
+                            text=[f"{p:.0f}%" if p >= 8 else "" for p in pct], textposition="inside",
+                            insidetextanchor="middle", textfont={"size": 15})
+            fig.update_layout(barmode="stack", height=380, legend={"orientation": "h", "y": -0.12},
+                              xaxis={"range": [0, 100], "ticksuffix": "%"},
+                              yaxis={"categoryorder": "array", "categoryarray": nomes[::-1]},
+                              margin={"l": 10, "r": 10, "t": 95, "b": 10})
+            return fig
+
         for col, r in zip(q, res):
             nome_ef = "proporção ≥ 4" if r.rq == "RQ1" else "ρ"
-            tit = (f"{r.rq} · {r.teste.split(' (')[0]}<br><sup>p {a.fmt_p(r.p)} · Holm {a.fmt_p(r.p_holm)} · n = {r.n}{sufixo}"
-                   f"<br>{nome_ef} = {a.fmt(r.efeito)} [{a.fmt(r.ic[0], 2)}; {a.fmt(r.ic[1], 2)}]</sup>")
+            pergunta = {"RQ1": "Difere do neutro?", "RQ2": "Mais uso, mais produtividade percebida?",
+                        "RQ3": "Mais experiência, mais produtividade percebida?"}[r.rq]
+            tit = (f"<b>{r.rq} · {pergunta}</b><br><sup>{nome_ef} = {a.fmt(r.efeito)} [{a.fmt(r.ic[0], 2)}; {a.fmt(r.ic[1], 2)}]"
+                   f"<br>p {a.fmt_p(r.p)} · Holm {a.fmt_p(r.p_holm)} · n = {r.n}{sufixo}</sup>")
             if r.rq == "RQ1":
-                fig = grafico_barras(v["classe_PP"], "", a.CLASSES_PP)
-                fig.update_layout(title=tit, height=360, yaxis_title=None, xaxis_title=None, margin={"l": 10, "r": 10, "t": 90, "b": 10})
-                fig.update_xaxes(range=[0, max(int(v["classe_PP"].value_counts().max()), 1) * 1.4])
+                tot = pd.Series(["Todos os usuários"] * len(v), index=v.index)
+                fig = empilhado(tot, ["Todos os usuários"])
+                fig.update_layout(height=380)
+            elif r.rq == "RQ2":
+                rot = {3: "Algumas vezes por mês", 4: "Algumas vezes por semana", 5: "Todos os dias"}
+                fig = empilhado(v["U1"], [k for k in (3, 4, 5) if (v["U1"] == k).any()], rot)
             else:
-                x = "U1" if r.rq == "RQ2" else "P1"
-                tab = v.groupby([x, "PP_med"]).size().reset_index(name="n")
-                fig = px.scatter(tab, x=x, y="PP_med", size="n", text="n")
-                fig.update_traces(textposition="middle center", marker={"sizemin": 10, "opacity": 0.6})
-                fig.update_layout(title=tit, height=360, yaxis={"range": [0.5, 5.5], "dtick": 1},
-                                  margin={"l": 10, "r": 10, "t": 90, "b": 10})
-                if x == "U1":
-                    fig.update_layout(xaxis={"range": [1.5, 5.5], "tickvals": [2, 3, 4, 5], "ticktext": ["Poucas vezes", "Mensal", "Semanal", "Diária"]})
+                fig = empilhado(v["faixa_P1"], [f for f in a.ORDEM_FAIXAS if (v["faixa_P1"] == f).any()],
+                                {f: f"{f} anos" for f in a.ORDEM_FAIXAS})
+            fig.update_layout(title=tit)
             col.plotly_chart(fig, width="stretch")
