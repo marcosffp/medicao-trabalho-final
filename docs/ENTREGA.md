@@ -22,7 +22,8 @@
 - [x] PDF offline com prints das 6 abas: `docs/dashboard_offline.pdf` (gerado em 22/11, regerado em 24/11 a partir do dashboard com o XLSX oficial; sem dados pessoais). Regerar se o código ou os dados mudarem.
 - [x] PDF do protocolo conferido contra o `.md` em 22/11: mesmo texto (só quebras de linha e formatação diferem). As datas do PDF (entrega 10/11, abertura 11/11) são as planejadas; a divergência está em D6.
 - [ ] Enviar a mensagem ao professor (modelo no fim deste arquivo) e anotar a resposta aqui.
-- [ ] Definir responsáveis em `docs/defesa.md` e ensaiar com cronômetro.
+- [x] Responsáveis definidos em `docs/defesa.md` (um bloco contínuo por integrante).
+- [ ] Ensaiar com cronômetro (dois ensaios) e registrar na seção 6 de `docs/defesa.md`.
 - [x] Decisão de manter o XLSX público confirmada em 22/11 (`docs/evidencias/REVISAO_PRIVACIDADE.md`).
 
 ## Mensagem para o professor (item 11 da Fonte, seção 13)
