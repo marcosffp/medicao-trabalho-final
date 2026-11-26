@@ -311,12 +311,12 @@ with abas[1]:
                         textposition="inside", insidetextanchor="middle",
                         customdata=[d[nivel] for _, d, _ in linhas],
                         hovertemplate="%{y}<br>" + a.LIKERT[nivel] + ": %{customdata:.1f}%<extra></extra>")
-        fig.update_layout(barmode="relative", height=420, legend={"orientation": "h", "y": -0.15, "traceorder": "normal"},
-                          xaxis={"title": "% das respostas (discordância à esquerda, concordância à direita)",
+        fig.update_layout(barmode="relative", height=470, legend={"orientation": "h", "yref": "container", "y": 0.0, "yanchor": "bottom", "x": 0.5, "xanchor": "center", "traceorder": "normal"},
+                          xaxis={"title": {"text": "% das respostas (discordância à esquerda, concordância à direita)", "standoff": 8},
                                  "range": [-100, 100], "tickvals": [-100, -50, 0, 50, 100],
                                  "ticktext": ["100%", "50%", "0", "50%", "100%"]},
-                          yaxis={"categoryorder": "array", "categoryarray": ordem_y},
-                          margin={"l": 10, "r": 10, "t": 20, "b": 10})
+                          yaxis={"categoryorder": "array", "categoryarray": ordem_y, "automargin": True},
+                          margin={"l": 10, "r": 10, "t": 20, "b": 110})
         fig.add_vline(x=0, line_color="black", line_width=1)
         st.plotly_chart(fig, width="stretch")
         st.caption(f"n = {len(v)} respostas válidas no filtro; o n de cada item aparece no rótulo da barra. O neutro (3) aparece dividido ao meio dos dois lados do zero. "
@@ -619,107 +619,85 @@ with abas[5]:
 
 
 # --------------------------------------------------------------------------
-# 0. Apresentação (roteiro de 8 minutos; só os números essenciais)
+# Apresentação (resumo enxuto)
 # --------------------------------------------------------------------------
+AZUL, LAV = "#2a5d8f", "#7a6a9d"
 with aba_apresentacao:
-    st.header("Resumo do estudo")
     n_rec = len(todas)
     n_inel = int((todas["status"] == "Inelegível").sum())
     n_desc = int((todas["status"] == "Descartada").sum())
     n_val = int((todas["status"] == "Válida").sum())
 
-    st.subheader("1. Objetivo, questões e amostra")
-    st.markdown("**Objetivo (GQM):** caracterizar a **produtividade percebida** (nível, relação com a frequência de uso "
-                "e variação com a experiência) de desenvolvedores no Brasil que usam assistentes de IA.  \n"
-                "**RQ1** difere do neutro? · **RQ2** associa-se à frequência de uso? · **RQ3** associa-se à experiência? "
-                "Autorrelato, transversal, vale só para esta amostra.")
+    st.subheader("Amostra")
     c = st.columns(5)
     c[0].metric("Recebidas", n_rec)
-    c[1].metric("Inelegíveis (T1 = não)", n_inel)
-    c[2].metric("Descartadas (AT1)", n_desc)
+    c[1].metric("Inelegíveis", n_inel)
+    c[2].metric("Descartadas", n_desc)
     c[3].metric("Válidas", n_val, delta=f"mínimo de {a.N_META}: ok" if n_val >= a.N_META else "abaixo do mínimo",
                 delta_color="normal" if n_val >= a.N_META else "inverse")
-    c[4].metric("Margem de erro (p = 0,5)", f"± {a.pp(a.margem_erro(0.5, n_val))}")
+    c[4].metric("Margem de erro", f"± {a.pp(a.margem_erro(0.5, n_val))}")
+    st.caption("RQ1: difere do neutro? · RQ2: associa-se à frequência de uso? · RQ3: associa-se à experiência?")
 
-    st.subheader("2. Evidências da coleta")
+    st.subheader("Coleta")
     dias_ap = todas.dropna(subset=["carimbo"]).assign(dia=lambda d: d["carimbo"].dt.strftime("%d/%m"))
     pd_ = dias_ap.groupby("dia").size().reset_index(name="n")
-    fig = px.bar(pd_, x="dia", y="n", text="n", height=240)
-    fig.update_layout(margin={"l": 10, "r": 10, "t": 10, "b": 10}, yaxis_title="respostas", xaxis_title=None)
-    e1, e2 = st.columns([1, 1])
+    fig = px.bar(pd_, x="dia", y="n", text="n", height=250)
+    fig.update_traces(marker_color=AZUL, textposition="outside")
+    fig.update_layout(margin={"l": 10, "r": 10, "t": 10, "b": 10}, yaxis_title=None, xaxis_title=None,
+                      yaxis={"visible": False})
+    e1, e2 = st.columns([3, 2])
     e1.plotly_chart(fig, width="stretch")
     primeira = todas["carimbo"].min()
-    e2.markdown(f"- Protocolo enviado no Canvas: **{a.PROTOCOLO_ENVIO:%d/%m/%Y às %H:%M}**\n"
-                f"- Primeira resposta: **{primeira:%d/%m/%Y às %H:%M}** "
-                + ("(depois do protocolo: R-08 atendida)" if primeira > a.PROTOCOLO_ENVIO else "(**antes** do protocolo!)") + "\n"
-                f"- Exportação bruta com carimbo e hash SHA-256 no repositório\n"
-                f"- Prints de divulgação de 16 e 17/11, sem dados pessoais\n"
-                f"- **Lacuna declarada (D8):** o formulário não registra a origem; os prints provam quando "
-                f"o convite saiu, não quem respondeu por qual canal")
+    e2.markdown(f"**Protocolo:** {a.PROTOCOLO_ENVIO:%d/%m às %H:%M}  \n"
+                f"**1ª resposta:** {primeira:%d/%m às %H:%M} "
+                + ("✓" if primeira > a.PROTOCOLO_ENVIO else "✗") + "  \n"
+                "**Export bruto** com hash SHA-256  \n"
+                "**Lacuna (D8):** origem de cada resposta não registrada")
 
-    st.subheader("3. Itens Likert e confiabilidade")
     if len(validas):
-        linhas_ap = []
-        for item in ["PP1", "PP2", "PP3", "PP4", "PP5r"]:
-            dist = validas[item].value_counts(normalize=True).reindex(range(1, 6), fill_value=0) * 100
-            linhas_ap.append((a.PP_TEXTO["PP5" if item == "PP5r" else item] + (" [recodificado]" if item == "PP5r" else ""), dist))
+        st.subheader("Produtividade percebida")
+        ca = alfa_cache(validas)
+        itens_ap = [("PP1", "PP1 Mais rápido"), ("PP2", "PP2 Mais tarefas"), ("PP3", "PP3 Melhor qualidade"),
+                    ("PP4", "PP4 Menos retrabalho"), ("PP5r", "PP5 Menos esforço")]
+        rot_ap = [r for _, r in itens_ap]
+        dist_ap = {k: validas[k].value_counts(normalize=True).reindex(range(1, 6), fill_value=0) * 100 for k, _ in itens_ap}
         fig = go.Figure()
         for nivel, lado, mostra in [(3, -1, True), (2, -1, True), (1, -1, True), (3, 1, False), (4, 1, True), (5, 1, True)]:
-            fig.add_bar(y=[r for r, _ in linhas_ap], x=[d[nivel] / (2 if nivel == 3 else 1) * lado for _, d in linhas_ap],
-                        orientation="h", name=f"{nivel} - {a.LIKERT[nivel]}", marker_color=CORES_LIKERT[nivel],
-                        showlegend=mostra, legendrank=nivel,
-                        text=[f"{d[nivel]:.0f}%" if (nivel != 3 or lado == 1) and d[nivel] >= 4 else "" for _, d in linhas_ap],
-                        textposition="inside", insidetextanchor="middle")
-        fig.update_layout(barmode="relative", height=330, legend={"orientation": "h", "y": -0.2},
+            fig.add_bar(y=rot_ap, x=[dist_ap[k][nivel] / (2 if nivel == 3 else 1) * lado for k, _ in itens_ap],
+                        orientation="h", name=a.LIKERT[nivel], marker_color=CORES_LIKERT[nivel], showlegend=mostra,
+                        legendrank=nivel, text=[f"{dist_ap[k][nivel]:.0f}%" if (nivel != 3 or lado == 1) and dist_ap[k][nivel] >= 6 else ""
+                                                 for k, _ in itens_ap], textposition="inside", insidetextanchor="middle")
+        fig.update_layout(barmode="relative", height=400, legend={"orientation": "h", "yref": "container", "y": 0.0, "yanchor": "bottom", "x": 0.5, "xanchor": "center"},
                           xaxis={"range": [-100, 100], "tickvals": [-100, -50, 0, 50, 100],
                                  "ticktext": ["100%", "50%", "0", "50%", "100%"]},
-                          yaxis={"categoryorder": "array", "categoryarray": [r for r, _ in linhas_ap][::-1]},
-                          margin={"l": 10, "r": 10, "t": 10, "b": 10})
-        fig.add_vline(x=0, line_color="black", line_width=1)
-        st.plotly_chart(fig, width="stretch")
-        ca = alfa_cache(validas)
-        k = st.columns(3)
-        k[0].metric("Alfa de Cronbach (PP1 a PP5, PP5 recodificado)", a.fmt(ca["alfa"]))
-        k[1].metric("IC 95% (bootstrap)", f"[{a.fmt(ca['ic'][0], 2)}; {a.fmt(ca['ic'][1], 2)}]")
-        k[2].metric("n / k", f"{ca['n']} / {ca['k']}")
-        if np.isfinite(ca["alfa"]) and ca["alfa"] < 0.70:
-            st.warning("Alfa abaixo de 0,70 (decisão prévia): consistência questionável, declarada como limitação. "
-                       "Subescalas e alfa sem cada item estão na aba Confiabilidade.")
+                          yaxis={"categoryorder": "array", "categoryarray": rot_ap[::-1], "automargin": True},
+                          margin={"l": 10, "r": 10, "t": 10, "b": 80})
+        fig.add_vline(x=0, line_color="#2b2b3a", line_width=1)
+        k1, k2 = st.columns([3, 1])
+        k1.plotly_chart(fig, width="stretch")
+        k2.metric("Alfa de Cronbach", a.fmt(ca["alfa"]), delta="abaixo de 0,70" if ca["alfa"] < 0.70 else "aceitável",
+                  delta_color="inverse" if ca["alfa"] < 0.70 else "normal")
+        k2.caption(f"IC 95% [{a.fmt(ca['ic'][0], 2)}; {a.fmt(ca['ic'][1], 2)}] · n = {ca['n']}")
 
-        st.subheader("4. Respostas às questões de pesquisa")
+        st.subheader("Questões de pesquisa")
         res_ap = confirmatorios(validas)
         cols = st.columns(3)
         for col, r in zip(cols, res_ap):
+            if r.p_holm < 0.05:
+                veredito = "Acima do neutro" if r.rq == "RQ1" else f"Associação de efeito {r.leitura_efeito}"
+            else:
+                veredito = "Inconclusiva"
             with col.container(border=True):
-                st.markdown(f"**{r.rq}** · {r.pergunta}")
-                st.caption(r.teste)
+                st.markdown(f"#### {r.rq} · {veredito}")
                 m = st.columns(2)
-                m[0].metric("p bruto", a.fmt_p(r.p))
-                m[1].metric("p (Holm)", a.fmt_p(r.p_holm))
-                m = st.columns(2)
-                m[0].metric("Efeito", a.fmt(r.efeito), help=r.efeito_nome)
-                m[1].metric("IC 95%", f"[{a.fmt(r.ic[0], 2)}; {a.fmt(r.ic[1], 2)}]")
-                st.markdown(f"n = {r.n} · {r.margem_texto}")
-                st.markdown(f"**Leitura:** {interpretacao(r)}")
-        st.caption("Conclusões só sobre produtividade **percebida** e associação, nunca causa, e só para esta amostra.")
-        if filtro_ativo and segmento_ok():
-            st.markdown(f"**Filtro ativo ({len(filtrada)} de {len(validas)}), exploratório e sem ajuste:**")
-            st.dataframe(tabela_resultados(confirmatorios(filtrada)), hide_index=True, width="stretch")
+                m[0].metric("p (Holm)", a.fmt_p(r.p_holm))
+                m[1].metric("Efeito" + (" (≥ 4)" if r.rq == "RQ1" else " (ρ)"), a.fmt(r.efeito))
+                st.caption(f"IC 95% [{a.fmt(r.ic[0], 2)}; {a.fmt(r.ic[1], 2)}] · n = {r.n}")
 
-    st.subheader("5. Desvios, limitações e fechamento")
+    st.subheader("Desvios e limitações")
     d1, d2 = st.columns(2)
-    d1.markdown("**Desvios que mais pesam**\n"
-                "- **D3:** coleta de 13 a 19/11 (previsto 11 a 20) porque o protocolo só foi enviado em 13/11\n"
-                "- **D7:** o convite menciona produtividade (risco de autosseleção e desejabilidade social)\n"
-                "- **D8:** sem prova da origem de cada resposta\n"
-                "- Demais (D1 a D6) na aba Metodologia e desvios")
-    d2.markdown("**Limitações**\n"
-                "- Amostra de conveniência, concentrada em organizações grandes e em iniciantes\n"
-                "- 72% das respostas em um único dia (17/11)\n"
-                "- Alfa abaixo de 0,70; RQ3 inconclusiva (poucos seniores)\n"
-                "- Taxa de resposta não calculável")
-    st.success("**Síntese:** a produtividade percebida fica acima do neutro (RQ1), associa-se à frequência de uso "
-               "com efeito médio (RQ2) e não mostra relação clara com a experiência (RQ3, inconclusiva).")
+    d1.markdown("**Desvios**\n- Coleta de 13 a 19/11, não 11 a 20\n- Convite cita produtividade\n- Origem das respostas sem prova")
+    d2.markdown("**Limitações**\n- Amostra de conveniência\n- Alfa abaixo de 0,70\n- RQ3 inconclusiva")
 
 
 # --------------------------------------------------------------------------
@@ -780,11 +758,11 @@ with aba_dashboard:
                         name=a.LIKERT[nivel], marker_color=CORES_LIKERT[nivel], showlegend=mostra, legendrank=nivel,
                         text=[f"{dist[k][nivel]:.0f}%" if (nivel != 3 or lado == 1) and dist[k][nivel] >= 5 else ""
                               for k, _ in itens], textposition="inside", insidetextanchor="middle")
-        fig.update_layout(barmode="relative", title=f"Itens Likert (n = {len(v)})", height=380,
-                          legend={"orientation": "h", "y": -0.18},
+        fig.update_layout(barmode="relative", title=f"Itens Likert (n = {len(v)})", height=420,
+                          legend={"orientation": "h", "yref": "container", "y": 0.0, "yanchor": "bottom", "x": 0.5, "xanchor": "center"},
                           xaxis={"range": [-100, 100], "tickvals": [-100, -50, 0, 50, 100],
                                  "ticktext": ["100%", "50%", "0", "50%", "100%"]},
-                          yaxis={"categoryorder": "array", "categoryarray": rot[::-1]}, **LAYOUT)
+                          yaxis={"categoryorder": "array", "categoryarray": rot[::-1]}, **{**LAYOUT, "margin": {"l": 10, "r": 10, "t": 70, "b": 70}})
         fig.add_vline(x=0, line_color="#2b2b3a", line_width=1)
         l1.plotly_chart(fig, width="stretch")
         f = grafico_barras(v["PP_med"].map(lambda x: f"{x} - {a.LIKERT[x]}"), "PP_med",
