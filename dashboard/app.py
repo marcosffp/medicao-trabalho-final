@@ -151,8 +151,9 @@ if eh_preteste:
 if filtro_ativo:
     st.info(f"Filtro ativo: {len(filtrada)} de {len(validas)} respostas válidas.")
 
-abas = st.tabs(["Perfil da amostra", "Itens Likert", "Questões de pesquisa", "Confiabilidade",
-                "Segmentos e exploratórias", "Metodologia e desvios"])
+_todas_abas = st.tabs(["Apresentação", "Perfil da amostra", "Itens Likert", "Questões de pesquisa", "Confiabilidade",
+                       "Segmentos e exploratórias", "Metodologia e desvios"])
+aba_apresentacao, abas = _todas_abas[0], _todas_abas[1:]
 
 
 def grafico_barras(serie: pd.Series, titulo: str, ordem: list | None = None, pct_base: int | None = None):
@@ -614,3 +615,111 @@ with abas[5]:
     desvios = PASTA / "desvios.md"
     if desvios.is_file():
         st.markdown(desvios.read_text(encoding="utf-8"))
+
+
+# --------------------------------------------------------------------------
+# 0. Apresentação (roteiro de 8 minutos; só os números essenciais)
+# --------------------------------------------------------------------------
+with aba_apresentacao:
+    st.header("Apresentação em 8 minutos")
+    st.caption("Resumo guiado, na ordem do roteiro da defesa. Tudo é recalculado a partir do arquivo bruto; "
+               "os detalhes ficam nas outras abas. Os filtros da barra lateral valem para o bloco 4.")
+    n_rec = len(todas)
+    n_inel = int((todas["status"] == "Inelegível").sum())
+    n_desc = int((todas["status"] == "Descartada").sum())
+    n_val = int((todas["status"] == "Válida").sum())
+
+    st.subheader("1. Objetivo, questões e amostra")
+    st.markdown("**Objetivo (GQM):** caracterizar a **produtividade percebida** (nível, relação com a frequência de uso "
+                "e variação com a experiência) de desenvolvedores no Brasil que usam assistentes de IA.  \n"
+                "**RQ1** difere do neutro? · **RQ2** associa-se à frequência de uso? · **RQ3** associa-se à experiência? "
+                "Autorrelato, transversal, vale só para esta amostra.")
+    c = st.columns(5)
+    c[0].metric("Recebidas", n_rec)
+    c[1].metric("Inelegíveis (T1 = não)", n_inel)
+    c[2].metric("Descartadas (AT1)", n_desc)
+    c[3].metric("Válidas", n_val, delta=f"mínimo de {a.N_META} atendido" if n_val >= a.N_META else "abaixo do mínimo",
+                delta_color="normal" if n_val >= a.N_META else "inverse")
+    c[4].metric("Margem de erro (p = 0,5)", f"± {a.pp(a.margem_erro(0.5, n_val))}")
+
+    st.subheader("2. Evidências da coleta")
+    dias_ap = todas.dropna(subset=["carimbo"]).assign(dia=lambda d: d["carimbo"].dt.strftime("%d/%m"))
+    pd_ = dias_ap.groupby("dia").size().reset_index(name="n")
+    fig = px.bar(pd_, x="dia", y="n", text="n", height=240)
+    fig.update_layout(margin={"l": 10, "r": 10, "t": 10, "b": 10}, yaxis_title="respostas", xaxis_title=None)
+    e1, e2 = st.columns([1, 1])
+    e1.plotly_chart(fig, width="stretch")
+    primeira = todas["carimbo"].min()
+    e2.markdown(f"- Protocolo enviado no Canvas: **{a.PROTOCOLO_ENVIO:%d/%m/%Y às %H:%M}**\n"
+                f"- Primeira resposta: **{primeira:%d/%m/%Y às %H:%M}** "
+                + ("(depois do protocolo: R-08 atendida)" if primeira > a.PROTOCOLO_ENVIO else "(**antes** do protocolo!)") + "\n"
+                f"- Exportação bruta com carimbo e hash SHA-256 no repositório\n"
+                f"- Prints de divulgação de 16 e 17/11 (sem dados pessoais) e painel do Formulários ao vivo\n"
+                f"- **Lacuna declarada (D8):** o formulário não registra a origem; os prints provam quando "
+                f"o convite saiu, não quem respondeu por qual canal")
+
+    st.subheader("3. Itens Likert e confiabilidade")
+    if len(validas):
+        linhas_ap = []
+        for item in ["PP1", "PP2", "PP3", "PP4", "PP5r"]:
+            dist = validas[item].value_counts(normalize=True).reindex(range(1, 6), fill_value=0) * 100
+            linhas_ap.append((a.PP_TEXTO["PP5" if item == "PP5r" else item] + (" [recodificado]" if item == "PP5r" else ""), dist))
+        fig = go.Figure()
+        for nivel, lado, mostra in [(3, -1, True), (2, -1, True), (1, -1, True), (3, 1, False), (4, 1, True), (5, 1, True)]:
+            fig.add_bar(y=[r for r, _ in linhas_ap], x=[d[nivel] / (2 if nivel == 3 else 1) * lado for _, d in linhas_ap],
+                        orientation="h", name=f"{nivel} - {a.LIKERT[nivel]}", marker_color=CORES_LIKERT[nivel],
+                        showlegend=mostra, legendrank=nivel,
+                        text=[f"{d[nivel]:.0f}%" if (nivel != 3 or lado == 1) and d[nivel] >= 4 else "" for _, d in linhas_ap],
+                        textposition="inside", insidetextanchor="middle")
+        fig.update_layout(barmode="relative", height=330, legend={"orientation": "h", "y": -0.2},
+                          xaxis={"range": [-100, 100], "tickvals": [-100, -50, 0, 50, 100],
+                                 "ticktext": ["100%", "50%", "0", "50%", "100%"]},
+                          yaxis={"categoryorder": "array", "categoryarray": [r for r, _ in linhas_ap][::-1]},
+                          margin={"l": 10, "r": 10, "t": 10, "b": 10})
+        fig.add_vline(x=0, line_color="black", line_width=1)
+        st.plotly_chart(fig, width="stretch")
+        ca = alfa_cache(validas)
+        k = st.columns(3)
+        k[0].metric("Alfa de Cronbach (PP1 a PP5, PP5 recodificado)", a.fmt(ca["alfa"]))
+        k[1].metric("IC 95% (bootstrap)", f"[{a.fmt(ca['ic'][0], 2)}; {a.fmt(ca['ic'][1], 2)}]")
+        k[2].metric("n / k", f"{ca['n']} / {ca['k']}")
+        if np.isfinite(ca["alfa"]) and ca["alfa"] < 0.70:
+            st.warning("Alfa abaixo de 0,70 (decisão prévia): consistência questionável, declarada como limitação. "
+                       "Subescalas e alfa sem cada item estão na aba Confiabilidade.")
+
+        st.subheader("4. Respostas às questões de pesquisa")
+        res_ap = confirmatorios(validas)
+        cols = st.columns(3)
+        for col, r in zip(cols, res_ap):
+            with col.container(border=True):
+                st.markdown(f"**{r.rq}** · {r.pergunta}")
+                st.caption(r.teste)
+                m = st.columns(2)
+                m[0].metric("p bruto", a.fmt_p(r.p))
+                m[1].metric("p (Holm)", a.fmt_p(r.p_holm))
+                m = st.columns(2)
+                m[0].metric("Efeito", a.fmt(r.efeito), help=r.efeito_nome)
+                m[1].metric("IC 95%", f"[{a.fmt(r.ic[0], 2)}; {a.fmt(r.ic[1], 2)}]")
+                st.markdown(f"n = {r.n} · {r.margem_texto}")
+                st.markdown(f"**Leitura:** {interpretacao(r)}")
+        st.caption("Conclusões só sobre produtividade **percebida** e associação, nunca causa, e só para esta amostra.")
+        if filtro_ativo and segmento_ok():
+            st.markdown(f"**Filtro ativo ({len(filtrada)} de {len(validas)}), exploratório e sem ajuste:**")
+            st.dataframe(tabela_resultados(confirmatorios(filtrada)), hide_index=True, width="stretch")
+        elif not filtro_ativo:
+            st.info("Para mostrar um segmento ao vivo, escolha um filtro na barra lateral (ex.: tempo de experiência).")
+
+    st.subheader("5. Desvios, limitações e fechamento")
+    d1, d2 = st.columns(2)
+    d1.markdown("**Desvios que mais pesam**\n"
+                "- **D3:** coleta de 13 a 19/11 (previsto 11 a 20) porque o protocolo só foi enviado em 13/11\n"
+                "- **D7:** o convite menciona produtividade (risco de autosseleção e desejabilidade social)\n"
+                "- **D8:** sem prova da origem de cada resposta\n"
+                "- Demais (D1 a D6) na aba Metodologia e desvios")
+    d2.markdown("**Limitações**\n"
+                "- Amostra de conveniência, concentrada em organizações grandes e em iniciantes\n"
+                "- 72% das respostas em um único dia (17/11)\n"
+                "- Alfa abaixo de 0,70; RQ3 inconclusiva (poucos seniores)\n"
+                "- Taxa de resposta não calculável")
+    st.success("**Síntese:** a produtividade percebida fica acima do neutro (RQ1), associa-se à frequência de uso "
+               "com efeito médio (RQ2) e não mostra relação clara com a experiência (RQ3, inconclusiva).")

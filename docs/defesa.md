@@ -12,6 +12,8 @@ Apoio para C5 (2,0 pts). Os números abaixo foram recalculados em 22/11/2026 (`d
 
 ## 2. Roteiro de 8 minutos
 
+**Use a aba "Apresentação" (primeira aba do dashboard):** ela traz, em rolagem única e na ordem da tabela abaixo, os blocos 1 a 5 com só os números essenciais. As demais abas ficam como reserva para a arguição. O filtro da barra lateral atualiza o bloco das RQs.
+
 | Tempo | Conteúdo | Quem fala |
 |---|---|---|
 | 0:00–2:00 | Tema, objetivo GQM em uma frase e as 3 RQs; aba "Perfil da amostra": 90 recebidas, 11 inelegíveis (T1), 10 descartadas (AT1), 69 válidas, mínimo de 50 atendido | **Marcos** |
