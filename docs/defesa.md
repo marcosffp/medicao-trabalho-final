@@ -7,7 +7,7 @@ Apoio para C5 (2,0 pts). Os números abaixo foram recalculados em 22/11/2026 (`d
 - [ ] Dashboard aberto em https://survey-ia-medicao-es.streamlit.app/ **e** local (`streamlit run dashboard/app.py`) como reserva.
 - [ ] Painel do Google Formulários aberto com a conta do dono, logada e testada (nunca exibir e-mails de respondentes). Deve mostrar 90 respostas e o formulário fechado.
 - [ ] Export bruto, `SHA256SUMS.txt`, print do Canvas (13/11 9:17) e prints de divulgação (16 e 17/11, `docs/evidencias/divulgacao/`) à mão.
-- [ ] Plano B offline: PDF com prints das 6 abas, caso a internet caia.
+- [ ] Plano B offline: PDF com prints das 7 abas (inclui "Apresentação"), caso a internet caia.
 - [ ] Dois ensaios com cronômetro (registrar na seção 6).
 
 ## 2. Roteiro de 8 minutos

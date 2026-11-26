@@ -19,7 +19,7 @@
 - [x] Tarjas dos prints conferidas visualmente em 24/11 (nomes, telefones e avatares cobertos).
 - [x] Painel do Google Formulários aberto pelo dono em 22/11: **90 respostas**, igual ao export. Formulário **fechado** para novas respostas em 22/11 (a coleta terminou em 19/11 17:50; o fechamento formal veio depois).
 - [x] (histórico) Abrir o painel do Google Formulários com a conta do **dono** (a ferramenta já está confirmada; falta só testar o acesso ao painel e à aba de respostas). Conferir também se o formulário está **fechado** para novas respostas, para que o painel não mostre mais que as 90 do export.
-- [x] PDF offline com prints das 6 abas: `docs/dashboard_offline.pdf` (gerado em 22/11, regerado em 24/11 a partir do dashboard com o XLSX oficial; sem dados pessoais). Regerar se o código ou os dados mudarem.
+- [x] PDF offline com prints das 7 abas (inclui "Apresentação"): `docs/dashboard_offline.pdf` (gerado em 22/11, regerado em 26/11 a partir do dashboard com o XLSX oficial; sem dados pessoais). Regerar se o código ou os dados mudarem.
 - [x] PDF do protocolo conferido contra o `.md` em 22/11: mesmo texto (só quebras de linha e formatação diferem). As datas do PDF (entrega 10/11, abertura 11/11) são as planejadas; a divergência está em D6.
 - [ ] Enviar a mensagem ao professor (modelo no fim deste arquivo) e anotar a resposta aqui.
 - [x] Responsáveis definidos em `docs/defesa.md` (um bloco contínuo por integrante).
