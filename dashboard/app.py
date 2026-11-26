@@ -28,7 +28,7 @@ import analise as a
 RAIZ = Path(__file__).resolve().parent.parent
 PASTA = Path(__file__).resolve().parent
 
-st.set_page_config(page_title="Survey IA e produtividade percebida", layout="wide")
+st.set_page_config(page_title="Survey IA e produtividade percebida", layout="wide", initial_sidebar_state="collapsed")
 
 CORES_LIKERT = {1: "#b2182b", 2: "#ef8a62", 3: "#bdbdbd", 4: "#67a9cf", 5: "#2166ac"}
 
@@ -92,22 +92,25 @@ todas, validas = dados.todas, dados.validas
 # --------------------------------------------------------------------------
 # Filtros por segmento
 # --------------------------------------------------------------------------
-st.sidebar.title("Filtros por segmento")
-st.sidebar.caption("Valem para perfil, Likert, confiabilidade e análises exploratórias. "
-                   "A resposta confirmatória de cada RQ usa sempre a amostra completa.")
+cabecalho = st.container()
+_todas_abas = st.tabs(["Dashboard", "Perfil da amostra", "Itens Likert", "Questões de pesquisa", "Confiabilidade",
+                       "Segmentos e exploratórias", "Metodologia e desvios", "Apresentação"])
+aba_dashboard, abas, aba_apresentacao = _todas_abas[0], _todas_abas[1:7], _todas_abas[7]
 
 
-def multiselect(rotulo: str, serie: pd.Series) -> list:
+def multiselect(rotulo: str, serie: pd.Series, coluna) -> list:
     opcoes = [c for c in serie.cat.categories if (serie == c).any()]
-    return st.sidebar.multiselect(rotulo, opcoes, placeholder="Todos")
+    return coluna.multiselect(rotulo, opcoes, placeholder="Todos")
 
 
-f_faixa = multiselect("Tempo de experiência (P1, anos)", validas["faixa_P1"])
-f_t2 = multiselect("Vínculo (T2)", validas["T2"])
-f_p2 = multiselect("Porte da organização (P2)", validas["P2"])
-f_p3 = multiselect("Tempo de uso de IA (P3)", validas["P3"])
-f_u1 = multiselect("Frequência de uso (U1)", validas["U1_rotulo"])
-f_p4 = st.sidebar.multiselect("Usa a ferramenta (P4)", dados.categorias_p4, placeholder="Todas")
+with aba_dashboard:
+    _fc = st.columns(6)
+    f_faixa = multiselect("Experiência (P1)", validas["faixa_P1"], _fc[0])
+    f_t2 = multiselect("Vínculo (T2)", validas["T2"], _fc[1])
+    f_p2 = multiselect("Porte (P2)", validas["P2"], _fc[2])
+    f_p3 = multiselect("Tempo de uso de IA (P3)", validas["P3"], _fc[3])
+    f_u1 = multiselect("Frequência (U1)", validas["U1_rotulo"], _fc[4])
+    f_p4 = _fc[5].multiselect("Ferramenta (P4)", dados.categorias_p4, placeholder="Todas")
 
 mask = pd.Series(True, index=validas.index)
 for col, sel in [("faixa_P1", f_faixa), ("T2", f_t2), ("P2", f_p2), ("P3", f_p3), ("U1_rotulo", f_u1)]:
@@ -117,7 +120,6 @@ if f_p4:
     mask &= validas[[f"P4::{c}" for c in f_p4]].any(axis=1)
 filtrada = validas[mask]
 filtro_ativo = bool(f_faixa or f_t2 or f_p2 or f_p3 or f_u1 or f_p4)
-st.sidebar.metric("Respostas válidas no filtro", f"{len(filtrada)} de {len(validas)}")
 
 
 AVISO_N_PEQUENO = 10  # aviso de cautela; abaixo de MIN_SEGMENTO (5) o segmento é ocultado
@@ -142,18 +144,17 @@ def segmento_ok() -> bool:
 # --------------------------------------------------------------------------
 # Cabeçalho
 # --------------------------------------------------------------------------
-st.title("Assistentes de IA e produtividade percebida")
-st.caption("Survey com desenvolvedores no Brasil · Medição e Experimentação em Engenharia de Software (PUC Minas)")
-if eh_preteste:
-    st.warning("Os dados carregados são do **pré-teste** (06 e 07/11/2026). Pelo protocolo, eles não entram "
-               "na análise. Os números abaixo só demonstram o funcionamento do dashboard. Depois da coleta "
-               "(11 a 20/11/2026), coloque a exportação da coleta na raiz do projeto ou envie-a na barra lateral.")
-if filtro_ativo:
-    st.info(f"Filtro ativo: {len(filtrada)} de {len(validas)} respostas válidas.")
+with cabecalho:
+    st.title("Assistentes de IA e produtividade percebida")
+    st.caption("Survey com desenvolvedores no Brasil · Medição e Experimentação em Engenharia de Software (PUC Minas)")
+    if eh_preteste:
+        st.warning("Os dados carregados são do **pré-teste** (06 e 07/11/2026). Pelo protocolo, eles não entram "
+                   "na análise. Os números abaixo só demonstram o funcionamento do dashboard. Depois da coleta "
+                   "(11 a 20/11/2026), coloque a exportação da coleta na raiz do projeto ou envie-a na barra lateral.")
+    if filtro_ativo:
+        st.info(f"Filtro ativo: {len(filtrada)} de {len(validas)} respostas válidas.")
 
-_todas_abas = st.tabs(["Apresentação", "Perfil da amostra", "Itens Likert", "Questões de pesquisa", "Confiabilidade",
-                       "Segmentos e exploratórias", "Metodologia e desvios"])
-aba_apresentacao, abas = _todas_abas[0], _todas_abas[1:]
+
 
 
 def grafico_barras(serie: pd.Series, titulo: str, ordem: list | None = None, pct_base: int | None = None):
@@ -621,9 +622,7 @@ with abas[5]:
 # 0. Apresentação (roteiro de 8 minutos; só os números essenciais)
 # --------------------------------------------------------------------------
 with aba_apresentacao:
-    st.header("Apresentação em 8 minutos")
-    st.caption("Resumo guiado, na ordem do roteiro da defesa. Tudo é recalculado a partir do arquivo bruto; "
-               "os detalhes ficam nas outras abas. Os filtros da barra lateral valem para o bloco 4.")
+    st.header("Resumo do estudo")
     n_rec = len(todas)
     n_inel = int((todas["status"] == "Inelegível").sum())
     n_desc = int((todas["status"] == "Descartada").sum())
@@ -638,7 +637,7 @@ with aba_apresentacao:
     c[0].metric("Recebidas", n_rec)
     c[1].metric("Inelegíveis (T1 = não)", n_inel)
     c[2].metric("Descartadas (AT1)", n_desc)
-    c[3].metric("Válidas", n_val, delta=f"mínimo de {a.N_META} atendido" if n_val >= a.N_META else "abaixo do mínimo",
+    c[3].metric("Válidas", n_val, delta=f"mínimo de {a.N_META}: ok" if n_val >= a.N_META else "abaixo do mínimo",
                 delta_color="normal" if n_val >= a.N_META else "inverse")
     c[4].metric("Margem de erro (p = 0,5)", f"± {a.pp(a.margem_erro(0.5, n_val))}")
 
@@ -654,7 +653,7 @@ with aba_apresentacao:
                 f"- Primeira resposta: **{primeira:%d/%m/%Y às %H:%M}** "
                 + ("(depois do protocolo: R-08 atendida)" if primeira > a.PROTOCOLO_ENVIO else "(**antes** do protocolo!)") + "\n"
                 f"- Exportação bruta com carimbo e hash SHA-256 no repositório\n"
-                f"- Prints de divulgação de 16 e 17/11 (sem dados pessoais) e painel do Formulários ao vivo\n"
+                f"- Prints de divulgação de 16 e 17/11, sem dados pessoais\n"
                 f"- **Lacuna declarada (D8):** o formulário não registra a origem; os prints provam quando "
                 f"o convite saiu, não quem respondeu por qual canal")
 
@@ -706,8 +705,6 @@ with aba_apresentacao:
         if filtro_ativo and segmento_ok():
             st.markdown(f"**Filtro ativo ({len(filtrada)} de {len(validas)}), exploratório e sem ajuste:**")
             st.dataframe(tabela_resultados(confirmatorios(filtrada)), hide_index=True, width="stretch")
-        elif not filtro_ativo:
-            st.info("Para mostrar um segmento ao vivo, escolha um filtro na barra lateral (ex.: tempo de experiência).")
 
     st.subheader("5. Desvios, limitações e fechamento")
     d1, d2 = st.columns(2)
@@ -723,3 +720,117 @@ with aba_apresentacao:
                 "- Taxa de resposta não calculável")
     st.success("**Síntese:** a produtividade percebida fica acima do neutro (RQ1), associa-se à frequência de uso "
                "com efeito médio (RQ2) e não mostra relação clara com a experiência (RQ3, inconclusiva).")
+
+
+# --------------------------------------------------------------------------
+# Dashboard (aba de projeção: só gráficos, filtros e controles)
+# --------------------------------------------------------------------------
+LAYOUT = {"margin": {"l": 10, "r": 10, "t": 70, "b": 10}}
+with aba_dashboard:
+    c = st.columns(6)
+    c[0].metric("Recebidas", len(todas))
+    c[1].metric("Inelegíveis", int((todas["status"] == "Inelegível").sum()))
+    c[2].metric("Descartadas", int((todas["status"] == "Descartada").sum()))
+    c[3].metric("Válidas", len(validas))
+    c[4].metric("No filtro", len(filtrada))
+    c[5].metric("Margem (p = 0,5)", f"± {a.pp(a.margem_erro(0.5, max(len(filtrada), 1)))}")
+
+    if segmento_ok():
+        v = filtrada
+        # --- Funil e linha do tempo
+        g1, g2 = st.columns([1, 2])
+        fig = go.Figure(go.Funnel(y=["Recebidas", "Elegíveis", "Válidas"],
+                                  x=[len(todas), len(todas) - int((todas["status"] == "Inelegível").sum()), len(validas)],
+                                  textinfo="value+percent initial"))
+        fig.update_layout(title="Funil da coleta", height=330, **LAYOUT)
+        g1.plotly_chart(fig, width="stretch")
+        dd = todas.dropna(subset=["carimbo"]).assign(dia=lambda d: d["carimbo"].dt.normalize())
+        pdia = dd.groupby(["dia", "status"]).size().reset_index(name="n")
+        fig = go.Figure()
+        for nome, cor in {"Válida": "#2166ac", "Descartada": "#ef8a62", "Inelegível": "#bdbdbd"}.items():
+            sub = pdia[pdia["status"] == nome]
+            fig.add_bar(x=sub["dia"] + pd.Timedelta(hours=12), y=sub["n"], name=nome, marker_color=cor)
+        fig.update_layout(barmode="stack", title="Respostas por dia (linha tracejada: protocolo no Canvas, 13/11 9:17)",
+                          height=330, yaxis_title=None,
+                          xaxis={"type": "date", "tickformat": "%d/%m", "dtick": 86400000}, **LAYOUT)
+        fig.update_traces(width=86400000 * 0.8)
+        fig.add_shape(type="line", x0=a.PROTOCOLO_ENVIO, x1=a.PROTOCOLO_ENVIO, y0=0, y1=1, yref="paper",
+                      line={"color": "white", "dash": "dash"})
+        g2.plotly_chart(fig, width="stretch")
+
+        # --- Perfil
+        p1, p2, p3 = st.columns(3)
+        for col, serie, tit, ordem in [(p1, v["faixa_P1"], "Experiência (anos)", a.ORDEM_FAIXAS),
+                                       (p2, v["P2"], "Porte da organização", a.OPCOES_P2),
+                                       (p3, v["U1_rotulo"], "Frequência de uso", list(a.U1_ROTULOS.values())[1:])]:
+            f = grafico_barras(serie, tit, ordem)
+            f.update_layout(height=300, yaxis_title=None, xaxis_title=None, margin={"l": 10, "r": 10, "t": 40, "b": 10})
+            f.update_xaxes(range=[0, max(int(serie.value_counts().max()), 1) * 1.45])
+            col.plotly_chart(f, width="stretch")
+
+        # --- Likert divergente e PP_med
+        l1, l2 = st.columns([3, 2])
+        itens = [("PP1", "PP1 Mais rápido"), ("PP2", "PP2 Mais tarefas"), ("PP3", "PP3 Melhor qualidade"),
+                 ("PP4", "PP4 Menos retrabalho"), ("PP5r", "PP5 Menos esforço (recodificado)")]
+        fig = go.Figure()
+        rot = [r for _, r in itens]
+        dist = {k: v[k].value_counts(normalize=True).reindex(range(1, 6), fill_value=0) * 100 for k, _ in itens}
+        for nivel, lado, mostra in [(3, -1, True), (2, -1, True), (1, -1, True), (3, 1, False), (4, 1, True), (5, 1, True)]:
+            fig.add_bar(y=rot, x=[dist[k][nivel] / (2 if nivel == 3 else 1) * lado for k, _ in itens], orientation="h",
+                        name=a.LIKERT[nivel], marker_color=CORES_LIKERT[nivel], showlegend=mostra, legendrank=nivel,
+                        text=[f"{dist[k][nivel]:.0f}%" if (nivel != 3 or lado == 1) and dist[k][nivel] >= 5 else ""
+                              for k, _ in itens], textposition="inside", insidetextanchor="middle")
+        fig.update_layout(barmode="relative", title=f"Itens Likert (n = {len(v)})", height=380,
+                          legend={"orientation": "h", "y": -0.18},
+                          xaxis={"range": [-100, 100], "tickvals": [-100, -50, 0, 50, 100],
+                                 "ticktext": ["100%", "50%", "0", "50%", "100%"]},
+                          yaxis={"categoryorder": "array", "categoryarray": rot[::-1]}, **LAYOUT)
+        fig.add_vline(x=0, line_color="white", line_width=1)
+        l1.plotly_chart(fig, width="stretch")
+        f = grafico_barras(v["PP_med"].map(lambda x: f"{x} - {a.LIKERT[x]}"), "PP_med",
+                           [f"{i} - {a.LIKERT[i]}" for i in range(1, 6)])
+        f.update_layout(height=380, yaxis_title=None, xaxis_title=None, margin={"l": 10, "r": 10, "t": 70, "b": 10})
+        f.update_xaxes(range=[0, max(int(v["PP_med"].value_counts().max()), 1) * 1.45])
+        l2.plotly_chart(f, width="stretch")
+
+        # --- Confiabilidade
+        ca = alfa_cache(v)
+        r1, r2 = st.columns(2)
+        if not ca["itens"].empty:
+            it = ca["itens"]
+            fig = go.Figure(go.Bar(x=it["Item"], y=it["Alfa se o item for removido"],
+                                   text=it["Alfa se o item for removido"].round(2), textposition="outside",
+                                   marker_color="#67a9cf"))
+            fig.add_hline(y=0.70, line_dash="dash", line_color="#ef8a62", annotation_text="0,70")
+            fig.update_layout(title=f"Alfa de Cronbach = {a.fmt(ca['alfa'])} [{a.fmt(ca['ic'][0], 2)}; {a.fmt(ca['ic'][1], 2)}]"
+                                    f"<br><sup>alfa se o item for removido (n = {ca['n']})</sup>",
+                              height=340, yaxis={"range": [0, 1]}, **LAYOUT)
+            r1.plotly_chart(fig, width="stretch")
+            ct = it["Correlação item-total corrigida"]
+            fig = go.Figure(go.Bar(x=it["Item"], y=ct, text=ct.round(2), textposition="outside", marker_color="#67a9cf"))
+            fig.update_layout(title="Correlação item-total corrigida<br><sup>PP5 recodificado é o item mais fraco</sup>",
+                              height=340, yaxis={"range": [0, 0.8]}, **LAYOUT)
+            r2.plotly_chart(fig, width="stretch")
+
+        # --- RQs
+        res = confirmatorios(v)
+        sufixo = " · segmento" if filtro_ativo else ""
+        q = st.columns(3)
+        for col, r in zip(q, res):
+            nome_ef = "proporção ≥ 4" if r.rq == "RQ1" else "ρ"
+            tit = (f"{r.rq} · {r.teste.split(' (')[0]}<br><sup>p {a.fmt_p(r.p)} · Holm {a.fmt_p(r.p_holm)} · n = {r.n}{sufixo}"
+                   f"<br>{nome_ef} = {a.fmt(r.efeito)} [{a.fmt(r.ic[0], 2)}; {a.fmt(r.ic[1], 2)}]</sup>")
+            if r.rq == "RQ1":
+                fig = grafico_barras(v["classe_PP"], "", a.CLASSES_PP)
+                fig.update_layout(title=tit, height=360, yaxis_title=None, xaxis_title=None, margin={"l": 10, "r": 10, "t": 90, "b": 10})
+                fig.update_xaxes(range=[0, max(int(v["classe_PP"].value_counts().max()), 1) * 1.4])
+            else:
+                x = "U1" if r.rq == "RQ2" else "P1"
+                tab = v.groupby([x, "PP_med"]).size().reset_index(name="n")
+                fig = px.scatter(tab, x=x, y="PP_med", size="n", text="n")
+                fig.update_traces(textposition="middle center", marker={"sizemin": 10, "opacity": 0.6})
+                fig.update_layout(title=tit, height=360, yaxis={"range": [0.5, 5.5], "dtick": 1},
+                                  margin={"l": 10, "r": 10, "t": 90, "b": 10})
+                if x == "U1":
+                    fig.update_layout(xaxis={"range": [1.5, 5.5], "tickvals": [2, 3, 4, 5], "ticktext": ["Poucas vezes", "Mensal", "Semanal", "Diária"]})
+            col.plotly_chart(fig, width="stretch")

@@ -52,7 +52,7 @@ d=a.preparar(a.ler_arquivo(f,f), json.load(open('codificacao_outra.json'))); \
 | `docs/regras_de_limpeza.md` | Critérios de encerramento e descarte |
 | `docs/evidencias/` | Prints datados (Canvas e divulgação, em `divulgacao/`) e revisão de privacidade |
 | `docs/ENTREGA.md` | Pacote de entrega e verificação final |
-| `docs/dashboard_offline.pdf` | Plano B offline: capturas das 7 abas do dashboard, incluindo "Apresentação" |
+| `docs/dashboard_offline.pdf` | Plano B offline: capturas das 8 abas do dashboard (Dashboard de projeção e Apresentação incluídas) |
 | `docs/defesa.md` | Roteiro de 10 minutos, respostas-chave da arguição e cenários |
 
 ## Reprodutibilidade e integridade
