@@ -168,7 +168,7 @@ def grafico_barras(serie: pd.Series, titulo: str, ordem: list | None = None, pct
                  title=f"{titulo} (n = {int(df['n'].sum())})")
     fig.update_layout(yaxis={"categoryorder": "array", "categoryarray": df["categoria"].tolist()[::-1], "title": None},
                       xaxis_title="respostas", height=90 + 32 * len(df), margin={"l": 10, "r": 10, "t": 40, "b": 10})
-    fig.update_traces(textposition="outside", cliponaxis=False)
+    fig.update_traces(textposition="outside", cliponaxis=False, marker_color="#8fb8d9")
     return fig
 
 
@@ -741,7 +741,7 @@ with aba_dashboard:
         g1, g2 = st.columns([1, 2])
         fig = go.Figure(go.Funnel(y=["Recebidas", "Elegíveis", "Válidas"],
                                   x=[len(todas), len(todas) - int((todas["status"] == "Inelegível").sum()), len(validas)],
-                                  textinfo="value+percent initial"))
+                                  textinfo="value+percent initial", marker={"color": "#8fb8d9"}, textfont={"color": "#2b2b3a"}))
         fig.update_layout(title="Funil da coleta", height=330, **LAYOUT)
         g1.plotly_chart(fig, width="stretch")
         dd = todas.dropna(subset=["carimbo"]).assign(dia=lambda d: d["carimbo"].dt.normalize())
@@ -755,7 +755,7 @@ with aba_dashboard:
                           xaxis={"type": "date", "tickformat": "%d/%m", "dtick": 86400000}, **LAYOUT)
         fig.update_traces(width=86400000 * 0.8)
         fig.add_shape(type="line", x0=a.PROTOCOLO_ENVIO, x1=a.PROTOCOLO_ENVIO, y0=0, y1=1, yref="paper",
-                      line={"color": "white", "dash": "dash"})
+                      line={"color": "#2b2b3a", "dash": "dash"})
         g2.plotly_chart(fig, width="stretch")
 
         # --- Perfil
@@ -785,7 +785,7 @@ with aba_dashboard:
                           xaxis={"range": [-100, 100], "tickvals": [-100, -50, 0, 50, 100],
                                  "ticktext": ["100%", "50%", "0", "50%", "100%"]},
                           yaxis={"categoryorder": "array", "categoryarray": rot[::-1]}, **LAYOUT)
-        fig.add_vline(x=0, line_color="white", line_width=1)
+        fig.add_vline(x=0, line_color="#2b2b3a", line_width=1)
         l1.plotly_chart(fig, width="stretch")
         f = grafico_barras(v["PP_med"].map(lambda x: f"{x} - {a.LIKERT[x]}"), "PP_med",
                            [f"{i} - {a.LIKERT[i]}" for i in range(1, 6)])
