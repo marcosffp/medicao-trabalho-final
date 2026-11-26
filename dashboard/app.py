@@ -30,7 +30,7 @@ PASTA = Path(__file__).resolve().parent
 
 st.set_page_config(page_title="Survey IA e produtividade percebida", layout="wide", initial_sidebar_state="collapsed")
 
-CORES_LIKERT = {1: "#b2182b", 2: "#ef8a62", 3: "#bdbdbd", 4: "#67a9cf", 5: "#2166ac"}
+CORES_LIKERT = {1: "#8c2d3f", 2: "#cf7f78", 3: "#c9c3b8", 4: "#5f93bd", 5: "#2a5d8f"}
 
 
 # --------------------------------------------------------------------------
@@ -168,7 +168,7 @@ def grafico_barras(serie: pd.Series, titulo: str, ordem: list | None = None, pct
                  title=f"{titulo} (n = {int(df['n'].sum())})")
     fig.update_layout(yaxis={"categoryorder": "array", "categoryarray": df["categoria"].tolist()[::-1], "title": None},
                       xaxis_title="respostas", height=90 + 32 * len(df), margin={"l": 10, "r": 10, "t": 40, "b": 10})
-    fig.update_traces(textposition="outside", cliponaxis=False, marker_color="#8fb8d9")
+    fig.update_traces(textposition="outside", cliponaxis=False, marker_color="#7a6a9d")
     return fig
 
 
@@ -231,7 +231,7 @@ with abas[0]:
     por_dia = dias.groupby(["dia", "status"]).size().reset_index(name="n")
     if not por_dia.empty:
         fig = go.Figure()
-        cores_status = {"Válida": "#2166ac", "Descartada": "#ef8a62", "Inelegível": "#bdbdbd"}
+        cores_status = {"Válida": "#2a5d8f", "Descartada": "#cf7f78", "Inelegível": "#c9c3b8"}
         for st_nome, cor in cores_status.items():
             sub = por_dia[por_dia["status"] == st_nome]
             fig.add_bar(x=sub["dia"] + pd.Timedelta(hours=12), y=sub["n"], name=st_nome, marker_color=cor)
@@ -741,13 +741,13 @@ with aba_dashboard:
         g1, g2 = st.columns([1, 2])
         fig = go.Figure(go.Funnel(y=["Recebidas", "Elegíveis", "Válidas"],
                                   x=[len(todas), len(todas) - int((todas["status"] == "Inelegível").sum()), len(validas)],
-                                  textinfo="value+percent initial", marker={"color": "#8fb8d9"}, textfont={"color": "#2b2b3a"}))
+                                  textinfo="value+percent initial", marker={"color": "#7a6a9d"}, textfont={"color": "#2b2b3a"}))
         fig.update_layout(title="Funil da coleta", height=330, **LAYOUT)
         g1.plotly_chart(fig, width="stretch")
         dd = todas.dropna(subset=["carimbo"]).assign(dia=lambda d: d["carimbo"].dt.normalize())
         pdia = dd.groupby(["dia", "status"]).size().reset_index(name="n")
         fig = go.Figure()
-        for nome, cor in {"Válida": "#2166ac", "Descartada": "#ef8a62", "Inelegível": "#bdbdbd"}.items():
+        for nome, cor in {"Válida": "#2a5d8f", "Descartada": "#cf7f78", "Inelegível": "#c9c3b8"}.items():
             sub = pdia[pdia["status"] == nome]
             fig.add_bar(x=sub["dia"] + pd.Timedelta(hours=12), y=sub["n"], name=nome, marker_color=cor)
         fig.update_layout(barmode="stack", title="Respostas por dia (linha tracejada: protocolo no Canvas, 13/11 9:17)",
@@ -800,14 +800,14 @@ with aba_dashboard:
             it = ca["itens"]
             fig = go.Figure(go.Bar(x=it["Item"], y=it["Alfa se o item for removido"],
                                    text=it["Alfa se o item for removido"].round(2), textposition="outside",
-                                   marker_color="#67a9cf"))
-            fig.add_hline(y=0.70, line_dash="dash", line_color="#ef8a62", annotation_text="0,70")
+                                   marker_color="#7a6a9d"))
+            fig.add_hline(y=0.70, line_dash="dash", line_color="#8c2d3f", annotation_text="0,70")
             fig.update_layout(title=f"Alfa de Cronbach = {a.fmt(ca['alfa'])} [{a.fmt(ca['ic'][0], 2)}; {a.fmt(ca['ic'][1], 2)}]"
                                     f"<br><sup>alfa se o item for removido (n = {ca['n']})</sup>",
                               height=340, yaxis={"range": [0, 1]}, **LAYOUT)
             r1.plotly_chart(fig, width="stretch")
             ct = it["Correlação item-total corrigida"]
-            fig = go.Figure(go.Bar(x=it["Item"], y=ct, text=ct.round(2), textposition="outside", marker_color="#67a9cf"))
+            fig = go.Figure(go.Bar(x=it["Item"], y=ct, text=ct.round(2), textposition="outside", marker_color="#7a6a9d"))
             fig.update_layout(title="Correlação item-total corrigida<br><sup>PP5 recodificado é o item mais fraco</sup>",
                               height=340, yaxis={"range": [0, 0.8]}, **LAYOUT)
             r2.plotly_chart(fig, width="stretch")
@@ -816,7 +816,7 @@ with aba_dashboard:
         res = confirmatorios(v)
         sufixo = " · segmento" if filtro_ativo else ""
         q = st.columns(3)
-        COR_CLASSE = {a.CLASSES_PP[0]: "#ef8a62", a.CLASSES_PP[1]: "#bdbdbd", a.CLASSES_PP[2]: "#2166ac"}
+        COR_CLASSE = {a.CLASSES_PP[0]: "#8c2d3f", a.CLASSES_PP[1]: "#c9c3b8", a.CLASSES_PP[2]: "#2a5d8f"}
 
         def empilhado(grupos: pd.Series, ordem: list, rotulos: dict | None = None) -> go.Figure:
             """Barras 100% empilhadas: % de cada classe de PP_med dentro de cada grupo (com o n do grupo)."""
